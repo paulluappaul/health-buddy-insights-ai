@@ -3,8 +3,8 @@ import React from 'react';
 import { Target, Scale, Heart, Brain } from 'lucide-react';
 import MetricCard from './MetricCard';
 import NutritionChart from '../charts/NutritionChart';
-import WeightChart from '../charts/WeightChart';
-import VitalsChart from '../charts/VitalsChart';
+import EnhancedWeightChart from '../charts/EnhancedWeightChart';
+import EnhancedVitalsChart from '../charts/EnhancedVitalsChart';
 import MoodChart from '../charts/MoodChart';
 
 interface FoodEntry {
@@ -109,8 +109,8 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <NutritionChart data={weeklyNutrition} />
-        <WeightChart data={weeklyWeight} />
-        <VitalsChart data={weeklyVitals} />
+        <EnhancedWeightChart data={weeklyWeight} />
+        <EnhancedVitalsChart data={weeklyVitals} />
         <MoodChart data={moodData} />
       </div>
     </div>

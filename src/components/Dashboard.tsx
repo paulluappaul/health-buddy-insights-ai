@@ -56,7 +56,7 @@ const Dashboard = ({ foodEntries, healthData }: DashboardProps) => {
         </TabsContent>
         
         <TabsContent value="monthly" className="space-y-6">
-          <MonthlyView />
+          <MonthlyView foodEntries={foodEntries} healthData={healthData} />
         </TabsContent>
       </Tabs>
     </div>
