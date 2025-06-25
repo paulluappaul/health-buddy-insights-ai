@@ -186,7 +186,7 @@ const HealthMetrics = ({ onMetricsLogged }: { onMetricsLogged: (data: HealthData
             <Checkbox
               id="smoked"
               checked={smoked}
-              onCheckedChange={setSmoked}
+              onCheckedChange={(checked) => setSmoked(checked === true)}
             />
             <Label htmlFor="smoked" className="text-sm text-gray-600">
               Did you smoke today?
