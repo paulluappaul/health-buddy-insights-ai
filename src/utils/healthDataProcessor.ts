@@ -43,8 +43,7 @@ export const convertHealthDataForDashboard = (healthData: HealthData[]): Dashboa
 export const createHealthEntry = (data: any) => {
   const healthEntry: HealthData = {
     id: data.id,
-    date: data.timestamp || new Date(),
-    type: data.type
+    date: data.timestamp || new Date()
   };
 
   // Only add fields that have actual values
