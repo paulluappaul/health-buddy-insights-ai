@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -93,23 +92,24 @@ const Index = () => {
   };
 
   const handleHealthDataLogged = (data: any) => {
-    // Convert flexible metric data to compatible format
+    // Create health entry with only the actual data provided
     const healthEntry: HealthData = {
       id: data.id,
       date: data.timestamp || new Date(),
       type: data.type
     };
 
-    if (data.type === 'bloodPressure') {
+    // Only add fields that have actual values
+    if (data.type === 'bloodPressure' && data.systolic && data.diastolic) {
       healthEntry.bloodPressure = {
         systolic: data.systolic,
         diastolic: data.diastolic
       };
-    } else if (data.type === 'pulse') {
+    } else if (data.type === 'pulse' && data.pulse) {
       healthEntry.pulse = data.pulse;
-    } else if (data.type === 'weight') {
+    } else if (data.type === 'weight' && data.weight) {
       healthEntry.weight = data.weight;
-    } else if (data.type === 'mood') {
+    } else if (data.type === 'mood' && data.mood) {
       healthEntry.mood = data.mood;
     }
 
@@ -143,7 +143,7 @@ const Index = () => {
     setMedications(prev => [...processedMedications, ...prev]);
   };
 
-  // Convert health data for dashboard compatibility
+  // Convert health data for dashboard compatibility (ensuring proper defaults)
   const convertHealthDataForDashboard = (healthData: HealthData[]) => {
     return healthData.map(data => ({
       id: data.id,

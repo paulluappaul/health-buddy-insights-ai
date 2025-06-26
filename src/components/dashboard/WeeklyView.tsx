@@ -23,14 +23,14 @@ interface FoodEntry {
 interface HealthData {
   id: string;
   date: Date;
-  bloodPressure: {
+  bloodPressure?: {
     systolic: number;
     diastolic: number;
   };
-  pulse: number;
-  mood: string;
-  weight: number;
-  smoked: boolean;
+  pulse?: number;
+  mood?: string;
+  weight?: number;
+  smoked?: boolean;
   cigaretteCount?: number;
 }
 
@@ -49,33 +49,56 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
     fat: entry.nutrition.fat
   }));
 
-  const weeklyWeight = healthData.slice(-7).map((entry, index) => ({
-    day: `Day ${index + 1}`,
-    weight: entry.weight
-  }));
+  const weeklyWeight = healthData
+    .filter(entry => entry.weight !== undefined)
+    .slice(-7)
+    .map((entry, index) => ({
+      day: `Day ${index + 1}`,
+      weight: entry.weight!
+    }));
 
-  const weeklyVitals = healthData.slice(-7).map((entry, index) => ({
-    day: `Day ${index + 1}`,
-    systolic: entry.bloodPressure.systolic,
-    diastolic: entry.bloodPressure.diastolic,
-    pulse: entry.pulse
-  }));
+  const weeklyVitals = healthData
+    .filter(entry => entry.bloodPressure || entry.pulse)
+    .slice(-7)
+    .map((entry, index) => ({
+      day: `Day ${index + 1}`,
+      systolic: entry.bloodPressure?.systolic || 0,
+      diastolic: entry.bloodPressure?.diastolic || 0,
+      pulse: entry.pulse || 0
+    }));
 
   // Mood distribution
-  const moodCounts = healthData.slice(-7).reduce((acc, entry) => {
-    acc[entry.mood] = (acc[entry.mood] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const moodCounts = healthData
+    .filter(entry => entry.mood)
+    .slice(-7)
+    .reduce((acc, entry) => {
+      if (entry.mood) {
+        acc[entry.mood] = (acc[entry.mood] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
 
   const moodData = Object.entries(moodCounts).map(([mood, count]) => ({
     name: mood.charAt(0).toUpperCase() + mood.slice(1),
     value: count
   }));
 
-  // Calculate averages
-  const avgCalories = Math.round(foodEntries.slice(-7).reduce((sum, entry) => sum + entry.nutrition.calories, 0) / Math.max(foodEntries.slice(-7).length, 1));
-  const avgWeight = (healthData.slice(-7).reduce((sum, entry) => sum + entry.weight, 0) / Math.max(healthData.slice(-7).length, 1)).toFixed(1);
-  const avgPulse = Math.round(healthData.slice(-7).reduce((sum, entry) => sum + entry.pulse, 0) / Math.max(healthData.slice(-7).length, 1));
+  // Calculate averages (only from entries that have the data)
+  const calorieEntries = foodEntries.slice(-7);
+  const avgCalories = calorieEntries.length > 0 
+    ? Math.round(calorieEntries.reduce((sum, entry) => sum + entry.nutrition.calories, 0) / calorieEntries.length)
+    : 0;
+
+  const weightEntries = healthData.filter(entry => entry.weight !== undefined).slice(-7);
+  const avgWeight = weightEntries.length > 0
+    ? (weightEntries.reduce((sum, entry) => sum + entry.weight!, 0) / weightEntries.length).toFixed(1)
+    : '--';
+
+  const pulseEntries = healthData.filter(entry => entry.pulse !== undefined).slice(-7);
+  const avgPulse = pulseEntries.length > 0
+    ? Math.round(pulseEntries.reduce((sum, entry) => sum + entry.pulse!, 0) / pulseEntries.length)
+    : '--';
+
   const smokingDays = healthData.slice(-7).filter(entry => entry.smoked).length;
 
   return (
@@ -109,9 +132,9 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <NutritionChart data={weeklyNutrition} />
-        <EnhancedWeightChart data={weeklyWeight} />
-        <EnhancedVitalsChart data={weeklyVitals} />
-        <MoodChart data={moodData} />
+        {weeklyWeight.length > 0 && <EnhancedWeightChart data={weeklyWeight} />}
+        {weeklyVitals.length > 0 && <EnhancedVitalsChart data={weeklyVitals} />}
+        {moodData.length > 0 && <MoodChart data={moodData} />}
       </div>
     </div>
   );

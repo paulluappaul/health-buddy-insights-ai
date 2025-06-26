@@ -20,14 +20,14 @@ interface FoodEntry {
 interface HealthData {
   id: string;
   date: Date;
-  bloodPressure: {
+  bloodPressure?: {
     systolic: number;
     diastolic: number;
   };
-  pulse: number;
-  mood: string;
-  weight: number;
-  smoked: boolean;
+  pulse?: number;
+  mood?: string;
+  weight?: number;
+  smoked?: boolean;
   cigaretteCount?: number;
 }
 
@@ -59,6 +59,10 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
   const todayProtein = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.protein, 0);
   const todayFat = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.fat, 0);
 
+  // Get latest values (not averages) for today
+  const latestWeight = todaysHealthData.find(d => d.weight !== undefined)?.weight;
+  const latestPulse = todaysHealthData.find(d => d.pulse !== undefined)?.pulse;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -70,13 +74,13 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
         />
         <MetricCard
           icon={Scale}
-          value={todaysHealthData.length > 0 ? todaysHealthData[0].weight : '--'}
-          label="Today's Weight (kg)"
+          value={latestWeight ? latestWeight.toFixed(1) : '--'}
+          label="Latest Weight (kg)"
           colorClass="from-blue-50 to-indigo-50 border-blue-200 text-blue-700"
         />
         <MetricCard
           icon={Heart}
-          value={todaysHealthData.length > 0 ? todaysHealthData[0].pulse : '--'}
+          value={latestPulse || '--'}
           label="Latest Pulse (bpm)"
           colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
         />
@@ -122,7 +126,7 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="h-5 w-5 text-red-600" />
-              Today's Health Metrics
+              Today's Health Metrics  
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -137,10 +141,12 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span>BP: {data.bloodPressure.systolic}/{data.bloodPressure.diastolic}</span>
-                      <span>Pulse: {data.pulse}</span>
-                      <span>Mood: {data.mood}</span>
-                      <span>Weight: {data.weight}kg</span>
+                      {data.bloodPressure && (
+                        <span>BP: {data.bloodPressure.systolic}/{data.bloodPressure.diastolic}</span>
+                      )}
+                      {data.pulse && <span>Pulse: {data.pulse}</span>}
+                      {data.mood && <span>Mood: {data.mood}</span>}
+                      {data.weight && <span>Weight: {data.weight}kg</span>}
                     </div>
                   </div>
                 ))}

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { Activity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -20,9 +21,15 @@ interface BloodPressureInputProps {
 const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
+  const [systolicSlider, setSystolicSlider] = useState([120]);
+  const [diastolicSlider, setDiastolicSlider] = useState([80]);
+  const [useSliders, setUseSliders] = useState(false);
 
   const handleSubmit = () => {
-    if (!systolic || !diastolic) {
+    const systolicValue = useSliders ? systolicSlider[0] : parseInt(systolic);
+    const diastolicValue = useSliders ? diastolicSlider[0] : parseInt(diastolic);
+
+    if (!systolicValue || !diastolicValue) {
       toast({
         title: "Missing Information",
         description: "Please fill in both systolic and diastolic values.",
@@ -31,11 +38,8 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
       return;
     }
 
-    const systolicNum = parseInt(systolic);
-    const diastolicNum = parseInt(diastolic);
-
     // Validation
-    if (systolicNum < 70 || systolicNum > 250 || diastolicNum < 40 || diastolicNum > 150) {
+    if (systolicValue < 70 || systolicValue > 250 || diastolicValue < 40 || diastolicValue > 150) {
       toast({
         title: "Invalid Values",
         description: "Please enter realistic blood pressure values.",
@@ -45,17 +49,19 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
     }
 
     onDataLogged({
-      systolic: systolicNum,
-      diastolic: diastolicNum,
+      systolic: systolicValue,
+      diastolic: diastolicValue,
       timestamp: new Date()
     });
 
     setSystolic('');
     setDiastolic('');
+    setSystolicSlider([120]);
+    setDiastolicSlider([80]);
 
     toast({
       title: "Blood Pressure Logged!",
-      description: `${systolicNum}/${diastolicNum} mmHg recorded successfully.`,
+      description: `${systolicValue}/${diastolicValue} mmHg recorded successfully.`,
     });
   };
 
@@ -68,30 +74,73 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="systolic" className="text-sm text-gray-600">Systolic</Label>
-            <Input
-              id="systolic"
-              type="number"
-              placeholder="120"
-              value={systolic}
-              onChange={(e) => setSystolic(e.target.value)}
-              className="text-center"
-            />
-          </div>
-          <div>
-            <Label htmlFor="diastolic" className="text-sm text-gray-600">Diastolic</Label>
-            <Input
-              id="diastolic"
-              type="number"
-              placeholder="80"
-              value={diastolic}
-              onChange={(e) => setDiastolic(e.target.value)}
-              className="text-center"
-            />
-          </div>
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            type="checkbox"
+            id="use-sliders-bp"
+            checked={useSliders}
+            onChange={(e) => setUseSliders(e.target.checked)}
+            className="rounded"
+          />
+          <Label htmlFor="use-sliders-bp" className="text-sm">Use sliders for easier input</Label>
         </div>
+
+        {useSliders ? (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm text-gray-600 mb-2 block">
+                Systolic: {systolicSlider[0]} mmHg
+              </Label>
+              <Slider
+                value={systolicSlider}
+                onValueChange={setSystolicSlider}
+                max={200}
+                min={80}
+                step={5}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="text-sm text-gray-600 mb-2 block">
+                Diastolic: {diastolicSlider[0]} mmHg
+              </Label>
+              <Slider
+                value={diastolicSlider}
+                onValueChange={setDiastolicSlider}
+                max={120}
+                min={50}
+                step={5}
+                className="w-full"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="systolic" className="text-sm text-gray-600">Systolic</Label>
+              <Input
+                id="systolic"
+                type="number"
+                placeholder="120"
+                value={systolic}
+                onChange={(e) => setSystolic(e.target.value)}
+                className="text-center"
+              />
+            </div>
+            <div>
+              <Label htmlFor="diastolic" className="text-sm text-gray-600">Diastolic</Label>
+              <Input
+                id="diastolic"
+                type="number"
+                placeholder="80"
+                value={diastolic}
+                onChange={(e) => setDiastolic(e.target.value)}
+                className="text-center"
+              />
+            </div>
+          </div>
+        )}
+        
         <Button onClick={handleSubmit} className="w-full bg-red-600 hover:bg-red-700">
           Log Blood Pressure
         </Button>
