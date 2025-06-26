@@ -3,19 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import FoodTracker from '@/components/FoodTracker';
 import { Activity } from 'lucide-react';
-
-interface FoodEntry {
-  id: string;
-  text: string;
-  nutrition: {
-    calories: number;
-    carbs: number;
-    protein: number;
-    fat: number;
-    foods: string[];
-  };
-  timestamp: Date;
-}
+import { FoodEntry } from '@/types/nutrition';
 
 interface FoodTrackingTabProps {
   foodEntries: FoodEntry[];

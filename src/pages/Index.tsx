@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Dashboard from '@/components/Dashboard';
@@ -12,19 +11,7 @@ import { MedicationEntry } from '@/components/medication/MedicationInput';
 import { ExportData } from '@/utils/dataManager';
 import { convertHealthDataForDashboard, createHealthEntry } from '@/utils/healthDataProcessor';
 import { loadDataFromStorage, saveToStorage, testStoragePersistence } from '@/utils/localStorage';
-
-interface FoodEntry {
-  id: string;
-  text: string;
-  nutrition: {
-    calories: number;
-    carbs: number;
-    protein: number;
-    fat: number;
-    foods: string[];
-  };
-  timestamp: Date;
-}
+import { FoodEntry } from '@/types/nutrition';
 
 interface HealthData {
   id: string;
