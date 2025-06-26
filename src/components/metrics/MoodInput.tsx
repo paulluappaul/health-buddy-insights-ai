@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Smile } from 'lucide-react';
+import { Smile, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface MoodData {
@@ -17,6 +19,7 @@ interface MoodInputProps {
 
 const MoodInput = ({ onDataLogged }: MoodInputProps) => {
   const [mood, setMood] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const moodOptions = [
     { value: 'excellent', label: '😄 Excellent', color: 'text-green-600' },
@@ -28,7 +31,7 @@ const MoodInput = ({ onDataLogged }: MoodInputProps) => {
   ];
 
   const handleSubmit = () => {
-    if (!mood) {
+    if (!mood || mood === '') {
       toast({
         title: "Missing Information",
         description: "Please select your mood.",
@@ -37,9 +40,12 @@ const MoodInput = ({ onDataLogged }: MoodInputProps) => {
       return;
     }
 
+    const selectedDateTime = new Date(selectedDate);
+    selectedDateTime.setHours(new Date().getHours(), new Date().getMinutes());
+
     onDataLogged({
       mood,
-      timestamp: new Date()
+      timestamp: selectedDateTime
     });
 
     setMood('');
@@ -47,7 +53,7 @@ const MoodInput = ({ onDataLogged }: MoodInputProps) => {
     const selectedMood = moodOptions.find(option => option.value === mood);
     toast({
       title: "Mood Logged!",
-      description: `${selectedMood?.label} recorded successfully.`,
+      description: `${selectedMood?.label} recorded for ${selectedDateTime.toLocaleDateString()}.`,
     });
   };
 
@@ -60,6 +66,20 @@ const MoodInput = ({ onDataLogged }: MoodInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Date
+          </Label>
+          <Input
+            id="date"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
         <Select value={mood} onValueChange={setMood}>
           <SelectTrigger>
             <SelectValue placeholder="How do you feel?" />

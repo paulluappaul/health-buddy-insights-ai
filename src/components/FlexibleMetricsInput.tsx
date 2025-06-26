@@ -21,6 +21,7 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
       type,
       ...data
     };
+    console.log('Logging health data:', healthData);
     onHealthDataLogged(healthData);
   };
 

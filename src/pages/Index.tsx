@@ -11,7 +11,7 @@ import { Heart, Activity, BarChart3, Utensils, Shield, Settings } from 'lucide-r
 import { MedicationEntry } from '@/components/medication/MedicationInput';
 import { ExportData } from '@/utils/dataManager';
 import { convertHealthDataForDashboard, createHealthEntry } from '@/utils/healthDataProcessor';
-import { loadDataFromStorage, saveToStorage } from '@/utils/localStorage';
+import { loadDataFromStorage, saveToStorage, testStoragePersistence } from '@/utils/localStorage';
 
 interface FoodEntry {
   id: string;
@@ -48,35 +48,58 @@ const Index = () => {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const { foodEntries: loadedFoodEntries, healthData: loadedHealthData, medications: loadedMedications } = loadDataFromStorage();
-    setFoodEntries(loadedFoodEntries);
-    setHealthData(loadedHealthData);
-    setMedications(loadedMedications);
+    console.log('App starting - testing storage persistence...');
+    const storageWorking = testStoragePersistence();
+    
+    if (storageWorking) {
+      const { foodEntries: loadedFoodEntries, healthData: loadedHealthData, medications: loadedMedications } = loadDataFromStorage();
+      setFoodEntries(loadedFoodEntries);
+      setHealthData(loadedHealthData);
+      setMedications(loadedMedications);
+    } else {
+      console.warn('Storage persistence test failed - data may not persist between sessions');
+    }
   }, []);
 
   // Save data to localStorage whenever state changes
   useEffect(() => {
-    saveToStorage('myHealthBuddy_foodEntries', foodEntries);
+    if (foodEntries.length > 0) {
+      saveToStorage('myHealthBuddy_foodEntries', foodEntries);
+    }
   }, [foodEntries]);
 
   useEffect(() => {
-    saveToStorage('myHealthBuddy_healthData', healthData);
+    if (healthData.length > 0) {
+      saveToStorage('myHealthBuddy_healthData', healthData);
+    }
   }, [healthData]);
 
   useEffect(() => {
-    saveToStorage('myHealthBuddy_medications', medications);
+    if (medications.length > 0) {
+      saveToStorage('myHealthBuddy_medications', medications);
+    }
   }, [medications]);
 
   const handleFoodLogged = (entry: FoodEntry) => {
+    console.log('Food logged:', entry);
     setFoodEntries(prev => [entry, ...prev]);
   };
 
   const handleHealthDataLogged = (data: any) => {
+    console.log('Health data received:', data);
     const healthEntry = createHealthEntry(data);
-    setHealthData(prev => [healthEntry, ...prev]);
+    console.log('Health entry created:', healthEntry);
+    
+    // Only add the entry if it has meaningful data
+    if (healthEntry.bloodPressure || healthEntry.pulse || healthEntry.mood || healthEntry.weight || healthEntry.smoked !== undefined) {
+      setHealthData(prev => [healthEntry, ...prev]);
+    } else {
+      console.warn('Health entry rejected - no valid data:', healthEntry);
+    }
   };
 
   const handleMedicationLogged = (medication: MedicationEntry) => {
+    console.log('Medication logged:', medication);
     setMedications(prev => [medication, ...prev]);
   };
 

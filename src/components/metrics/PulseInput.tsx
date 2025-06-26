@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Heart } from 'lucide-react';
+import { Heart, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { validateHealthValue } from '@/utils/healthDataProcessor';
 
 interface PulseData {
   pulse: number;
@@ -21,21 +22,21 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
   const [pulse, setPulse] = useState('');
   const [pulseSlider, setPulseSlider] = useState([72]);
   const [useSlider, setUseSlider] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSubmit = () => {
     const pulseValue = useSlider ? pulseSlider[0] : parseInt(pulse);
 
-    if (!pulseValue) {
+    if (!pulseValue || pulseValue <= 0) {
       toast({
         title: "Missing Information",
-        description: "Please enter your pulse rate.",
+        description: "Please enter a valid pulse rate greater than zero.",
         variant: "destructive"
       });
       return;
     }
 
-    // Validation
-    if (pulseValue < 30 || pulseValue > 220) {
+    if (!validateHealthValue('pulse', pulseValue)) {
       toast({
         title: "Invalid Value",
         description: "Please enter a realistic pulse rate (30-220 bpm).",
@@ -44,9 +45,12 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
       return;
     }
 
+    const selectedDateTime = new Date(selectedDate);
+    selectedDateTime.setHours(new Date().getHours(), new Date().getMinutes());
+
     onDataLogged({
       pulse: pulseValue,
-      timestamp: new Date()
+      timestamp: selectedDateTime
     });
 
     setPulse('');
@@ -54,7 +58,7 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
 
     toast({
       title: "Pulse Logged!",
-      description: `${pulseValue} bpm recorded successfully.`,
+      description: `${pulseValue} bpm recorded for ${selectedDateTime.toLocaleDateString()}.`,
     });
   };
 
@@ -67,6 +71,20 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Date
+          </Label>
+          <Input
+            id="date"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
         <div className="flex items-center gap-2 mb-4">
           <input
             type="checkbox"
@@ -102,6 +120,7 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
               value={pulse}
               onChange={(e) => setPulse(e.target.value)}
               className="text-center"
+              min="1"
             />
           </div>
         )}

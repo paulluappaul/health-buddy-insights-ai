@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Activity } from 'lucide-react';
+import { Activity, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { validateHealthValue } from '@/utils/healthDataProcessor';
 
 interface BloodPressureData {
   systolic: number;
@@ -24,34 +25,38 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
   const [systolicSlider, setSystolicSlider] = useState([120]);
   const [diastolicSlider, setDiastolicSlider] = useState([80]);
   const [useSliders, setUseSliders] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSubmit = () => {
     const systolicValue = useSliders ? systolicSlider[0] : parseInt(systolic);
     const diastolicValue = useSliders ? diastolicSlider[0] : parseInt(diastolic);
 
-    if (!systolicValue || !diastolicValue) {
+    if (!systolicValue || !diastolicValue || systolicValue <= 0 || diastolicValue <= 0) {
       toast({
         title: "Missing Information",
-        description: "Please fill in both systolic and diastolic values.",
+        description: "Please enter valid blood pressure values greater than zero.",
         variant: "destructive"
       });
       return;
     }
 
-    // Validation
-    if (systolicValue < 70 || systolicValue > 250 || diastolicValue < 40 || diastolicValue > 150) {
+    const bpData = { systolic: systolicValue, diastolic: diastolicValue };
+    if (!validateHealthValue('bloodPressure', bpData)) {
       toast({
         title: "Invalid Values",
-        description: "Please enter realistic blood pressure values.",
+        description: "Please enter realistic blood pressure values (70-250/40-150 mmHg).",
         variant: "destructive"
       });
       return;
     }
+
+    const selectedDateTime = new Date(selectedDate);
+    selectedDateTime.setHours(new Date().getHours(), new Date().getMinutes());
 
     onDataLogged({
       systolic: systolicValue,
       diastolic: diastolicValue,
-      timestamp: new Date()
+      timestamp: selectedDateTime
     });
 
     setSystolic('');
@@ -61,7 +66,7 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
 
     toast({
       title: "Blood Pressure Logged!",
-      description: `${systolicValue}/${diastolicValue} mmHg recorded successfully.`,
+      description: `${systolicValue}/${diastolicValue} mmHg recorded for ${selectedDateTime.toLocaleDateString()}.`,
     });
   };
 
@@ -74,6 +79,20 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Date
+          </Label>
+          <Input
+            id="date"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
         <div className="flex items-center gap-2 mb-4">
           <input
             type="checkbox"
@@ -125,6 +144,7 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
                 value={systolic}
                 onChange={(e) => setSystolic(e.target.value)}
                 className="text-center"
+                min="1"
               />
             </div>
             <div>
@@ -136,6 +156,7 @@ const BloodPressureInput = ({ onDataLogged }: BloodPressureInputProps) => {
                 value={diastolic}
                 onChange={(e) => setDiastolic(e.target.value)}
                 className="text-center"
+                min="1"
               />
             </div>
           </div>
