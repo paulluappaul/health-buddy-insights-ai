@@ -26,6 +26,12 @@ const config: CapacitorConfig = {
       useDialog: true,
     },
   },
+  ios: {
+    contentInset: 'automatic'
+  },
+  android: {
+    allowMixedContent: true
+  }
 };
 
 export default config;

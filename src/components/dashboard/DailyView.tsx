@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, Scale, Heart, Calendar, Thermometer, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import MetricCard from './MetricCard';
+import TodaysMetrics from './TodaysMetrics';
+import NutritionBreakdown from './NutritionBreakdown';
+import HealthMetricsSummary from './HealthMetricsSummary';
 import { clearAllData } from '@/utils/localStorage';
 
 interface FoodEntry {
@@ -89,128 +90,40 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
     bloodPressure: latestBloodPressure
   });
 
-  const formatTemperature = (temp: number, unit: string) => {
-    if (unit === 'fahrenheit') {
-      return `${temp.toFixed(1)}°F`;
-    }
-    return `${temp.toFixed(1)}°C`;
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Today's Overview</h2>
+    <div className="space-y-6 px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold">Today's Overview</h2>
         <Button 
           onClick={clearAllData}
           variant="destructive" 
           size="sm"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 w-full sm:w-auto"
         >
           <Trash2 className="h-4 w-4" />
           Clear All Data
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <MetricCard
-          icon={Target}
-          value={todayCalories}
-          label="Today's Calories"
-          colorClass="from-orange-50 to-red-50 border-orange-200 text-orange-700"
-        />
-        <MetricCard
-          icon={Scale}
-          value={latestWeight ? latestWeight.toFixed(1) : '--'}
-          label="Latest Weight (kg)"
-          colorClass="from-blue-50 to-indigo-50 border-blue-200 text-blue-700"
-        />
-        <MetricCard
-          icon={Heart}
-          value={latestPulse || '--'}
-          label="Latest Pulse (bpm)"
-          colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
-        />
-        <MetricCard
-          icon={Thermometer}
-          value={latestTemperature ? formatTemperature(latestTemperature.temperature!, latestTemperature.temperatureUnit!) : '--'}
-          label="Latest Temperature"
-          colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
-        />
-        <MetricCard
-          icon={Calendar}
-          value={todaysHealthData.length}
-          label="Health Entries"
-          colorClass="from-green-50 to-emerald-50 border-green-200 text-green-700"
-        />
-      </div>
+      <TodaysMetrics
+        todayCalories={todayCalories}
+        latestWeight={latestWeight}
+        latestPulse={latestPulse}
+        latestTemperature={latestTemperature ? {
+          temperature: latestTemperature.temperature!,
+          temperatureUnit: latestTemperature.temperatureUnit!
+        } : undefined}
+        todaysHealthDataCount={todaysHealthData.length}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-orange-600" />
-              Today's Nutrition Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Calories</span>
-                <span className="text-lg font-bold text-orange-600">{todayCalories}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Carbohydrates</span>
-                <span className="text-lg font-bold text-blue-600">{todayCarbs.toFixed(1)}g</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Protein</span>
-                <span className="text-lg font-bold text-green-600">{todayProtein.toFixed(1)}g</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Fat</span>
-                <span className="text-lg font-bold text-purple-600">{todayFat.toFixed(1)}g</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-600" />
-              Today's Health Metrics  
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {todaysHealthData.length > 0 ? (
-              <div className="space-y-3">
-                {todaysHealthData.map((data, index) => (
-                  <div key={data.id} className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">Entry #{index + 1}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(data.date).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      {data.bloodPressure && data.bloodPressure.systolic > 0 && (
-                        <span>BP: {data.bloodPressure.systolic}/{data.bloodPressure.diastolic}</span>
-                      )}
-                      {data.pulse && data.pulse > 0 && <span>Pulse: {data.pulse}</span>}
-                      {data.mood && <span>Mood: {data.mood}</span>}
-                      {data.weight && data.weight > 0 && <span>Weight: {data.weight}kg</span>}
-                      {data.temperature && data.temperature > 0 && (
-                        <span>Temp: {formatTemperature(data.temperature, data.temperatureUnit!)}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">No health metrics logged today</p>
-            )}
-          </CardContent>
-        </Card>
+        <NutritionBreakdown
+          todayCalories={todayCalories}
+          todayCarbs={todayCarbs}
+          todayProtein={todayProtein}
+          todayFat={todayFat}
+        />
+        <HealthMetricsSummary todaysHealthData={todaysHealthData} />
       </div>
     </div>
   );

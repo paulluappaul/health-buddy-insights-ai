@@ -6,8 +6,9 @@ import PulseInput from './metrics/PulseInput';
 import WeightInput from './metrics/WeightInput';
 import MoodInput from './metrics/MoodInput';
 import TemperatureInput from './metrics/TemperatureInput';
+import SmokingInput from './metrics/SmokingInput';
 import MedicationInput, { MedicationEntry } from './medication/MedicationInput';
-import { Activity, Heart, Scale, Smile, Shield, Thermometer } from 'lucide-react';
+import { Activity, Heart, Scale, Smile, Shield, Thermometer, Cigarette } from 'lucide-react';
 
 interface FlexibleMetricsInputProps {
   onHealthDataLogged: (data: any) => void;
@@ -27,37 +28,41 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-0">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Track Your Health Metrics</h2>
-        <p className="text-gray-600">Log individual metrics as needed throughout your day</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Track Your Health Metrics</h2>
+        <p className="text-gray-600 text-sm sm:text-base">Log individual metrics as needed throughout your day</p>
       </div>
 
       <Tabs defaultValue="vitals" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-6">
-          <TabsTrigger value="vitals" className="flex items-center gap-1">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 mb-6 h-auto">
+          <TabsTrigger value="vitals" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">Vitals</span>
+            <span className="text-xs sm:text-sm">Vitals</span>
           </TabsTrigger>
-          <TabsTrigger value="pulse" className="flex items-center gap-1">
+          <TabsTrigger value="pulse" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Heart className="h-4 w-4" />
-            <span className="hidden sm:inline">Pulse</span>
+            <span className="text-xs sm:text-sm">Pulse</span>
           </TabsTrigger>
-          <TabsTrigger value="weight" className="flex items-center gap-1">
+          <TabsTrigger value="weight" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Scale className="h-4 w-4" />
-            <span className="hidden sm:inline">Weight</span>
+            <span className="text-xs sm:text-sm">Weight</span>
           </TabsTrigger>
-          <TabsTrigger value="temperature" className="flex items-center gap-1">
+          <TabsTrigger value="temperature" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Thermometer className="h-4 w-4" />
-            <span className="hidden sm:inline">Temp</span>
+            <span className="text-xs sm:text-sm">Temp</span>
           </TabsTrigger>
-          <TabsTrigger value="mood" className="flex items-center gap-1">
+          <TabsTrigger value="mood" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Smile className="h-4 w-4" />
-            <span className="hidden sm:inline">Mood</span>
+            <span className="text-xs sm:text-sm">Mood</span>
           </TabsTrigger>
-          <TabsTrigger value="medication" className="flex items-center gap-1">
+          <TabsTrigger value="smoking" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
+            <Cigarette className="h-4 w-4" />
+            <span className="text-xs sm:text-sm">Smoking</span>
+          </TabsTrigger>
+          <TabsTrigger value="medication" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Meds</span>
+            <span className="text-xs sm:text-sm">Meds</span>
           </TabsTrigger>
         </TabsList>
 
@@ -88,6 +93,12 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
         <TabsContent value="mood" className="space-y-4">
           <MoodInput 
             onDataLogged={(data) => handleMetricLogged('mood', data)}
+          />
+        </TabsContent>
+
+        <TabsContent value="smoking" className="space-y-4">
+          <SmokingInput 
+            onDataLogged={(data) => handleMetricLogged('smoking', data)}
           />
         </TabsContent>
 

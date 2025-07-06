@@ -133,8 +133,8 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className="space-y-6 px-2 sm:px-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
           icon={Target}
           value={avgCalories}
@@ -167,7 +167,7 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <NutritionChart data={weeklyNutrition} />
         {weeklyWeight.length > 0 && <EnhancedWeightChart data={weeklyWeight} />}
         {weeklyVitals.length > 0 && <EnhancedVitalsChart data={weeklyVitals} />}
