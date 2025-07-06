@@ -36,6 +36,21 @@ interface MedicationEntry {
   notes?: string;
 }
 
+export const clearAllData = () => {
+  try {
+    console.log('Clearing all stored data...');
+    localStorage.removeItem('myHealthBuddy_foodEntries');
+    localStorage.removeItem('myHealthBuddy_healthData');
+    localStorage.removeItem('myHealthBuddy_medications');
+    console.log('All data cleared successfully');
+    
+    // Force page reload to reset the app state
+    window.location.reload();
+  } catch (error) {
+    console.error('Error clearing data:', error);
+  }
+};
+
 export const loadDataFromStorage = () => {
   try {
     const savedFoodEntries = localStorage.getItem('myHealthBuddy_foodEntries');

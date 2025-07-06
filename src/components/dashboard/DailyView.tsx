@@ -1,8 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, Scale, Heart, Calendar, Thermometer } from 'lucide-react';
+import { Target, Scale, Heart, Calendar, Thermometer, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import MetricCard from './MetricCard';
+import { clearAllData } from '@/utils/localStorage';
 
 interface FoodEntry {
   id: string;
@@ -40,20 +42,29 @@ interface DailyViewProps {
 
 const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayString = today.toDateString();
+  
+  console.log('DailyView - Today:', todayString);
+  console.log('DailyView - Food entries:', foodEntries.length);
+  console.log('DailyView - Health data:', healthData.length);
 
-  // Filter today's data
+  // Filter today's data using date strings for more reliable comparison
   const todaysFoodEntries = foodEntries.filter(entry => {
     const entryDate = new Date(entry.timestamp);
-    entryDate.setHours(0, 0, 0, 0);
-    return entryDate.getTime() === today.getTime();
+    const entryString = entryDate.toDateString();
+    console.log('Food entry date:', entryString, 'matches today:', entryString === todayString);
+    return entryString === todayString;
   });
 
   const todaysHealthData = healthData.filter(entry => {
     const entryDate = new Date(entry.date);
-    entryDate.setHours(0, 0, 0, 0);
-    return entryDate.getTime() === today.getTime();
+    const entryString = entryDate.toDateString();
+    console.log('Health entry date:', entryString, 'matches today:', entryString === todayString);
+    return entryString === todayString;
   });
+
+  console.log('Filtered - Today\'s food entries:', todaysFoodEntries.length);
+  console.log('Filtered - Today\'s health data:', todaysHealthData.length);
 
   // Today's totals
   const todayCalories = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.calories, 0);
@@ -61,10 +72,11 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
   const todayProtein = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.protein, 0);
   const todayFat = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.fat, 0);
 
-  // Get latest values (not averages) for today
+  // Get latest values for today
   const latestWeight = todaysHealthData.find(d => d.weight !== undefined)?.weight;
   const latestPulse = todaysHealthData.find(d => d.pulse !== undefined)?.pulse;
   const latestTemperature = todaysHealthData.find(d => d.temperature !== undefined);
+  const latestBloodPressure = todaysHealthData.find(d => d.bloodPressure !== undefined)?.bloodPressure;
 
   const formatTemperature = (temp: number, unit: string) => {
     if (unit === 'fahrenheit') {
@@ -75,6 +87,19 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Today's Overview</h2>
+        <Button 
+          onClick={clearAllData}
+          variant="destructive" 
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear All Data
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <MetricCard
           icon={Target}

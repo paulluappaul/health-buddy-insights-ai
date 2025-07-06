@@ -35,6 +35,11 @@ export const useHealthBuddyData = () => {
     
     if (storageWorking) {
       const { foodEntries: loadedFoodEntries, healthData: loadedHealthData, medications: loadedMedications } = loadDataFromStorage();
+      console.log('Setting loaded data:', {
+        foodEntries: loadedFoodEntries.length,
+        healthData: loadedHealthData.length,
+        medications: loadedMedications.length
+      });
       setFoodEntries(loadedFoodEntries);
       setHealthData(loadedHealthData);
       setMedications(loadedMedications);
@@ -68,15 +73,31 @@ export const useHealthBuddyData = () => {
   };
 
   const handleHealthDataLogged = (data: any) => {
-    console.log('Health data received:', data);
-    const healthEntry = createHealthEntry(data);
-    console.log('Health entry created:', healthEntry);
+    console.log('Health data received for processing:', data);
     
-    // Only add the entry if it has meaningful data
-    if (healthEntry.bloodPressure || healthEntry.pulse || healthEntry.mood || healthEntry.weight || healthEntry.temperature || healthEntry.smoked !== undefined) {
-      setHealthData(prev => [healthEntry, ...prev]);
-    } else {
-      console.warn('Health entry rejected - no valid data:', healthEntry);
+    try {
+      const healthEntry = createHealthEntry(data);
+      console.log('Processed health entry:', healthEntry);
+      
+      // Only add the entry if it has meaningful data
+      const hasValidData = healthEntry.bloodPressure || 
+                          healthEntry.pulse || 
+                          healthEntry.mood || 
+                          healthEntry.weight || 
+                          healthEntry.temperature || 
+                          healthEntry.smoked !== undefined;
+      
+      if (hasValidData) {
+        setHealthData(prev => {
+          const newData = [healthEntry, ...prev];
+          console.log('Updated health data array length:', newData.length);
+          return newData;
+        });
+      } else {
+        console.warn('Health entry rejected - no valid data:', healthEntry);
+      }
+    } catch (error) {
+      console.error('Error processing health data:', error);
     }
   };
 

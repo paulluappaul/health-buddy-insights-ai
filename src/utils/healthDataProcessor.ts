@@ -46,16 +46,34 @@ export const convertHealthDataForDashboard = (healthData: HealthData[]): Dashboa
   }));
 };
 
-export const createHealthEntry = (data: any) => {
-  // Avoid circular references by creating a clean date object
-  const entryDate = data.timestamp ? new Date(data.timestamp) : (data.date ? new Date(data.date) : new Date());
+export const createHealthEntry = (data: any): HealthData => {
+  // Create a clean date object without circular references
+  let entryDate: Date;
   
+  if (data.timestamp) {
+    entryDate = new Date(data.timestamp);
+  } else if (data.date) {
+    if (data.date instanceof Date) {
+      entryDate = new Date(data.date.getTime());
+    } else if (typeof data.date === 'string') {
+      entryDate = new Date(data.date);
+    } else if (data.date._type === 'Date' && data.date.value) {
+      entryDate = new Date(data.date.value.iso || data.date.value.value);
+    } else {
+      entryDate = new Date();
+    }
+  } else {
+    entryDate = new Date();
+  }
+
+  console.log('Processing health entry with date:', entryDate.toISOString());
+
   const healthEntry: HealthData = {
-    id: data.id,
+    id: data.id || Date.now().toString(),
     date: entryDate
   };
 
-  // Only add fields that have actual meaningful values - NO MORE ZERO POLLUTION
+  // Only add fields that have meaningful values
   if (data.type === 'bloodPressure' && data.systolic && data.diastolic) {
     if (data.systolic > 0 && data.diastolic > 0) {
       healthEntry.bloodPressure = {
@@ -79,7 +97,7 @@ export const createHealthEntry = (data: any) => {
     }
   }
 
-  console.log('Created health entry (no circular refs):', healthEntry);
+  console.log('Created clean health entry:', healthEntry);
   return healthEntry;
 };
 
