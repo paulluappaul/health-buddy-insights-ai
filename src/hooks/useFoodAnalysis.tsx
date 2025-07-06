@@ -22,7 +22,7 @@ export const useFoodAnalysis = (onFoodLogged: (entry: FoodEntry) => void) => {
     }
   };
 
-  const handleAnalyze = async (foodText: string, selectedImage: File | null, geminiApiKey: string) => {
+  const handleAnalyze = async (foodText: string, selectedImage: File | null, geminiApiKey: string, customTimestamp?: Date) => {
     if (!foodText.trim() && !selectedImage) return;
     
     setIsAnalyzing(true);
@@ -34,18 +34,19 @@ export const useFoodAnalysis = (onFoodLogged: (entry: FoodEntry) => void) => {
         id: Date.now().toString(),
         text: selectedImage ? `[Image] ${foodText || 'Food from image'}` : foodText,
         nutrition,
-        timestamp: new Date()
+        timestamp: customTimestamp || new Date()
       };
       
       onFoodLogged(entry);
       
       toast({
         title: "Food Analyzed Successfully!",
-        description: `${nutrition.calories} calories analyzed with AI and saved.`,
+        description: `${nutrition.calories} calories analyzed with AI and saved for ${entry.timestamp.toLocaleString()}.`,
       });
 
       return { success: true };
     } catch (error) {
+      console.error('Food analysis error:', error);
       toast({
         title: "Analysis Error",
         description: error instanceof Error ? error.message : "Failed to analyze food. Please try again.",

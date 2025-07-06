@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import DateTimePicker from '@/components/common/DateTimePicker';
 
 export interface MedicationEntry {
   id: string;
@@ -29,6 +30,8 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
   const [frequency, setFrequency] = useState('');
   const [taken, setTaken] = useState(false);
   const [notes, setNotes] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
 
   const frequencyOptions = [
     { value: 'once-daily', label: 'Once Daily' },
@@ -50,13 +53,18 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
       return;
     }
 
+    // Create proper timestamp from date and time
+    const [hours, minutes] = selectedTime.split(':');
+    const timestamp = new Date(selectedDate);
+    timestamp.setHours(parseInt(hours), parseInt(minutes));
+
     const medicationEntry: MedicationEntry = {
       id: Date.now().toString(),
       name: name.trim(),
       dosage: dosage.trim(),
       frequency,
       taken,
-      timestamp: new Date(),
+      timestamp: timestamp,
       notes: notes.trim() || undefined
     };
 
@@ -71,7 +79,7 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
 
     toast({
       title: "Medication Logged!",
-      description: `${name} (${dosage}) has been recorded.`,
+      description: `${name} (${dosage}) recorded for ${timestamp.toLocaleString()}.`,
     });
   };
 
@@ -84,6 +92,14 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <DateTimePicker
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          onDateChange={setSelectedDate}
+          onTimeChange={setSelectedTime}
+          label="Medication Time"
+        />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="med-name" className="text-sm text-gray-600">Medication Name</Label>
@@ -130,7 +146,7 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
             onCheckedChange={(checked) => setTaken(checked === true)}
           />
           <Label htmlFor="taken" className="text-sm text-gray-600">
-            Taken today
+            Taken at this time
           </Label>
         </div>
 

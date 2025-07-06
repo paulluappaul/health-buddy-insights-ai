@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Heart, Calendar } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { validateHealthValue } from '@/utils/healthDataProcessor';
+import DateTimePicker from '@/components/common/DateTimePicker';
 
 interface PulseData {
   pulse: number;
@@ -23,6 +24,7 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
   const [pulseSlider, setPulseSlider] = useState([72]);
   const [useSlider, setUseSlider] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
 
   const handleSubmit = () => {
     const pulseValue = useSlider ? pulseSlider[0] : parseInt(pulse);
@@ -45,20 +47,26 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
       return;
     }
 
-    const selectedDateTime = new Date(selectedDate);
-    selectedDateTime.setHours(new Date().getHours(), new Date().getMinutes());
+    // Create proper timestamp from date and time
+    const [hours, minutes] = selectedTime.split(':');
+    const timestamp = new Date(selectedDate);
+    timestamp.setHours(parseInt(hours), parseInt(minutes));
 
-    onDataLogged({
+    const data = {
+      id: Date.now().toString(),
+      type: 'pulse',
       pulse: pulseValue,
-      timestamp: selectedDateTime
-    });
+      timestamp: timestamp
+    };
+
+    onDataLogged(data);
 
     setPulse('');
     setPulseSlider([72]);
 
     toast({
       title: "Pulse Logged!",
-      description: `${pulseValue} bpm recorded for ${selectedDateTime.toLocaleDateString()}.`,
+      description: `${pulseValue} bpm recorded for ${timestamp.toLocaleString()}.`,
     });
   };
 
@@ -71,19 +79,13 @@ const PulseInput = ({ onDataLogged }: PulseInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Date
-          </Label>
-          <Input
-            id="date"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
+        <DateTimePicker
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          onDateChange={setSelectedDate}
+          onTimeChange={setSelectedTime}
+          label="Pulse Measurement Time"
+        />
 
         <div className="flex items-center gap-2 mb-4">
           <input

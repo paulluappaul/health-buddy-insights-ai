@@ -47,24 +47,29 @@ export const convertHealthDataForDashboard = (healthData: HealthData[]): Dashboa
 };
 
 export const createHealthEntry = (data: any) => {
+  // Avoid circular references by creating a clean date object
+  const entryDate = data.timestamp ? new Date(data.timestamp) : (data.date ? new Date(data.date) : new Date());
+  
   const healthEntry: HealthData = {
     id: data.id,
-    date: data.date || data.timestamp || new Date()
+    date: entryDate
   };
 
-  // Only add fields that have actual non-zero values
-  if (data.type === 'bloodPressure' && data.systolic && data.diastolic && data.systolic > 0 && data.diastolic > 0) {
-    healthEntry.bloodPressure = {
-      systolic: data.systolic,
-      diastolic: data.diastolic
-    };
+  // Only add fields that have actual meaningful values - NO MORE ZERO POLLUTION
+  if (data.type === 'bloodPressure' && data.systolic && data.diastolic) {
+    if (data.systolic > 0 && data.diastolic > 0) {
+      healthEntry.bloodPressure = {
+        systolic: data.systolic,
+        diastolic: data.diastolic
+      };
+    }
   } else if (data.type === 'pulse' && data.pulse && data.pulse > 0) {
     healthEntry.pulse = data.pulse;
   } else if (data.type === 'weight' && data.weight && data.weight > 0) {
     healthEntry.weight = data.weight;
   } else if (data.type === 'temperature' && data.temperature && data.temperature > 0) {
     healthEntry.temperature = data.temperature;
-    healthEntry.temperatureUnit = data.unit || 'celsius';
+    healthEntry.temperatureUnit = data.originalUnit || data.unit || 'celsius';
   } else if (data.type === 'mood' && data.mood && data.mood !== '') {
     healthEntry.mood = data.mood;
   } else if (data.type === 'smoking') {
@@ -74,6 +79,7 @@ export const createHealthEntry = (data: any) => {
     }
   }
 
+  console.log('Created health entry (no circular refs):', healthEntry);
   return healthEntry;
 };
 

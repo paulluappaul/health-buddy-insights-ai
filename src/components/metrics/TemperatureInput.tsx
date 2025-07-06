@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Thermometer, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import DateTimePicker from '@/components/common/DateTimePicker';
 
 interface TemperatureInputProps {
   onDataLogged: (data: any) => void;
@@ -13,6 +14,8 @@ interface TemperatureInputProps {
 const TemperatureInput = ({ onDataLogged }: TemperatureInputProps) => {
   const [temperature, setTemperature] = useState('');
   const [unit, setUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,20 +35,27 @@ const TemperatureInput = ({ onDataLogged }: TemperatureInputProps) => {
       ? (tempValue - 32) * 5/9 
       : tempValue;
 
+    // Create proper timestamp from date and time
+    const [hours, minutes] = selectedTime.split(':');
+    const timestamp = new Date(selectedDate);
+    timestamp.setHours(parseInt(hours), parseInt(minutes));
+
     const data = {
+      id: Date.now().toString(),
+      type: 'temperature',
       temperature: tempInCelsius,
       unit: 'celsius',
       originalValue: tempValue,
       originalUnit: unit,
-      timestamp: new Date()
+      timestamp: timestamp
     };
 
-    console.log('Temperature logged:', data);
+    console.log('Temperature logged with proper timestamp:', data);
     onDataLogged(data);
     
     toast({
       title: "Temperature Recorded",
-      description: `${tempValue}°${unit.charAt(0).toUpperCase()} logged successfully`,
+      description: `${tempValue}°${unit.charAt(0).toUpperCase()} logged for ${timestamp.toLocaleString()}`,
     });
     
     setTemperature('');
@@ -61,6 +71,14 @@ const TemperatureInput = ({ onDataLogged }: TemperatureInputProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <DateTimePicker
+            selectedDate={selectedDate}
+            selectedTime={selectedTime}
+            onDateChange={setSelectedDate}
+            onTimeChange={setSelectedTime}
+            label="Temperature Reading Time"
+          />
+          
           <div className="flex gap-2">
             <Input
               type="number"

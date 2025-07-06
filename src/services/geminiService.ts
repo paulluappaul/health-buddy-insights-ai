@@ -47,7 +47,7 @@ Please provide a detailed breakdown in the following JSON format:
 Be as accurate as possible with standard nutritional values. If amounts aren't specified, estimate reasonable serving sizes.`;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +62,9 @@ Be as accurate as possible with standard nutritional values. If amounts aren't s
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status}`);
+        const errorData = await response.json();
+        console.error('Gemini API error details:', errorData);
+        throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
@@ -116,7 +118,7 @@ Be as accurate as possible with standard nutritional values. If amounts aren't s
 Be as accurate as possible with portion size estimation and standard nutritional values.`;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${this.apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +141,9 @@ Be as accurate as possible with portion size estimation and standard nutritional
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini Vision API error: ${response.status}`);
+        const errorData = await response.json();
+        console.error('Gemini Vision API error details:', errorData);
+        throw new Error(`Gemini Vision API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();

@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Scale, Calendar } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { validateHealthValue } from '@/utils/healthDataProcessor';
+import DateTimePicker from '@/components/common/DateTimePicker';
 
 interface WeightData {
   weight: number;
@@ -23,6 +24,7 @@ const WeightInput = ({ onDataLogged }: WeightInputProps) => {
   const [weightSlider, setWeightSlider] = useState([70]);
   const [useSlider, setUseSlider] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
 
   const handleSubmit = () => {
     const weightValue = useSlider ? weightSlider[0] : parseFloat(weight);
@@ -45,20 +47,26 @@ const WeightInput = ({ onDataLogged }: WeightInputProps) => {
       return;
     }
 
-    const selectedDateTime = new Date(selectedDate);
-    selectedDateTime.setHours(new Date().getHours(), new Date().getMinutes());
+    // Create proper timestamp from date and time
+    const [hours, minutes] = selectedTime.split(':');
+    const timestamp = new Date(selectedDate);
+    timestamp.setHours(parseInt(hours), parseInt(minutes));
 
-    onDataLogged({
+    const data = {
+      id: Date.now().toString(),
+      type: 'weight',
       weight: weightValue,
-      timestamp: selectedDateTime
-    });
+      timestamp: timestamp
+    };
+
+    onDataLogged(data);
 
     setWeight('');
     setWeightSlider([70]);
 
     toast({
       title: "Weight Logged!",
-      description: `${weightValue} kg recorded for ${selectedDateTime.toLocaleDateString()}.`,
+      description: `${weightValue} kg recorded for ${timestamp.toLocaleString()}.`,
     });
   };
 
@@ -71,19 +79,13 @@ const WeightInput = ({ onDataLogged }: WeightInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Date
-          </Label>
-          <Input
-            id="date"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
+        <DateTimePicker
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          onDateChange={setSelectedDate}
+          onTimeChange={setSelectedTime}
+          label="Weight Measurement Time"
+        />
 
         <div className="flex items-center gap-2 mb-4">
           <input

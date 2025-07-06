@@ -2,11 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Smile, Calendar } from 'lucide-react';
+import { Smile } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import DateTimePicker from '@/components/common/DateTimePicker';
 
 interface MoodData {
   mood: string;
@@ -20,6 +19,7 @@ interface MoodInputProps {
 const MoodInput = ({ onDataLogged }: MoodInputProps) => {
   const [mood, setMood] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
 
   const moodOptions = [
     { value: 'excellent', label: '😄 Excellent', color: 'text-green-600' },
@@ -40,20 +40,25 @@ const MoodInput = ({ onDataLogged }: MoodInputProps) => {
       return;
     }
 
-    const selectedDateTime = new Date(selectedDate);
-    selectedDateTime.setHours(new Date().getHours(), new Date().getMinutes());
+    // Create proper timestamp from date and time
+    const [hours, minutes] = selectedTime.split(':');
+    const timestamp = new Date(selectedDate);
+    timestamp.setHours(parseInt(hours), parseInt(minutes));
 
-    onDataLogged({
+    const data = {
+      id: Date.now().toString(),
+      type: 'mood',
       mood,
-      timestamp: selectedDateTime
-    });
+      timestamp: timestamp
+    };
 
+    onDataLogged(data);
     setMood('');
 
     const selectedMood = moodOptions.find(option => option.value === mood);
     toast({
       title: "Mood Logged!",
-      description: `${selectedMood?.label} recorded for ${selectedDateTime.toLocaleDateString()}.`,
+      description: `${selectedMood?.label} recorded for ${timestamp.toLocaleString()}.`,
     });
   };
 
@@ -66,19 +71,13 @@ const MoodInput = ({ onDataLogged }: MoodInputProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Date
-          </Label>
-          <Input
-            id="date"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
+        <DateTimePicker
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          onDateChange={setSelectedDate}
+          onTimeChange={setSelectedTime}
+          label="Mood Check Time"
+        />
 
         <Select value={mood} onValueChange={setMood}>
           <SelectTrigger>

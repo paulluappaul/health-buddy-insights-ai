@@ -8,6 +8,7 @@ import ApiKeyInput from './ApiKeyInput';
 import ImageUpload from './ImageUpload';
 import FoodDescriptionInput from './FoodDescriptionInput';
 import AnalysisResults from './AnalysisResults';
+import DateTimePicker from '@/components/common/DateTimePicker';
 
 interface FoodTrackerFormProps {
   onFoodLogged: (entry: FoodEntry) => void;
@@ -17,11 +18,18 @@ const FoodTrackerForm = ({ onFoodLogged }: FoodTrackerFormProps) => {
   const [foodText, setFoodText] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
   
   const { isAnalyzing, lastAnalysis, handleAnalyze } = useFoodAnalysis(onFoodLogged);
 
   const onAnalyzeClick = async () => {
-    const result = await handleAnalyze(foodText, selectedImage, geminiApiKey);
+    // Create proper timestamp from date and time
+    const [hours, minutes] = selectedTime.split(':');
+    const timestamp = new Date(selectedDate);
+    timestamp.setHours(parseInt(hours), parseInt(minutes));
+
+    const result = await handleAnalyze(foodText, selectedImage, geminiApiKey, timestamp);
     if (result?.success) {
       setFoodText('');
       setSelectedImage(null);
@@ -33,6 +41,14 @@ const FoodTrackerForm = ({ onFoodLogged }: FoodTrackerFormProps) => {
       <ApiKeyInput 
         apiKey={geminiApiKey}
         onApiKeyChange={setGeminiApiKey}
+      />
+
+      <DateTimePicker
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        onDateChange={setSelectedDate}
+        onTimeChange={setSelectedTime}
+        label="Meal Time"
       />
 
       <ImageUpload 
