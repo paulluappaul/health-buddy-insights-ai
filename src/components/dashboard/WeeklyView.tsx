@@ -52,7 +52,7 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
   }));
 
   const weeklyWeight = healthData
-    .filter(entry => entry.weight !== undefined)
+    .filter(entry => entry.weight !== undefined && entry.weight > 0)
     .slice(-7)
     .map((entry, index) => ({
       day: `Day ${index + 1}`,
@@ -60,7 +60,10 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
     }));
 
   const weeklyVitals = healthData
-    .filter(entry => entry.bloodPressure || entry.pulse)
+    .filter(entry => 
+      (entry.bloodPressure && entry.bloodPressure.systolic > 0 && entry.bloodPressure.diastolic > 0) || 
+      (entry.pulse && entry.pulse > 0)
+    )
     .slice(-7)
     .map((entry, index) => ({
       day: `Day ${index + 1}`,
@@ -71,7 +74,7 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
 
   // Mood distribution
   const moodCounts = healthData
-    .filter(entry => entry.mood)
+    .filter(entry => entry.mood && entry.mood !== '')
     .slice(-7)
     .reduce((acc, entry) => {
       if (entry.mood) {
@@ -85,28 +88,49 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
     value: count
   }));
 
-  // Calculate averages (only from entries that have the data)
+  // Calculate averages - ONLY from entries that have ACTUAL data (no zeros/defaults)
   const calorieEntries = foodEntries.slice(-7);
   const avgCalories = calorieEntries.length > 0 
     ? Math.round(calorieEntries.reduce((sum, entry) => sum + entry.nutrition.calories, 0) / calorieEntries.length)
     : 0;
 
-  const weightEntries = healthData.filter(entry => entry.weight !== undefined).slice(-7);
-  const avgWeight = weightEntries.length > 0
-    ? (weightEntries.reduce((sum, entry) => sum + entry.weight!, 0) / weightEntries.length).toFixed(1)
+  // Only count weight entries that have actual values > 0
+  const actualWeightEntries = healthData
+    .filter(entry => entry.weight !== undefined && entry.weight > 0)
+    .slice(-7);
+  const avgWeight = actualWeightEntries.length > 0
+    ? (actualWeightEntries.reduce((sum, entry) => sum + entry.weight!, 0) / actualWeightEntries.length).toFixed(1)
     : '--';
 
-  const pulseEntries = healthData.filter(entry => entry.pulse !== undefined).slice(-7);
-  const avgPulse = pulseEntries.length > 0
-    ? Math.round(pulseEntries.reduce((sum, entry) => sum + entry.pulse!, 0) / pulseEntries.length)
+  // Only count pulse entries that have actual values > 0  
+  const actualPulseEntries = healthData
+    .filter(entry => entry.pulse !== undefined && entry.pulse > 0)
+    .slice(-7);
+  const avgPulse = actualPulseEntries.length > 0
+    ? Math.round(actualPulseEntries.reduce((sum, entry) => sum + entry.pulse!, 0) / actualPulseEntries.length)
     : '--';
 
-  const temperatureEntries = healthData.filter(entry => entry.temperature !== undefined).slice(-7);
-  const avgTemperature = temperatureEntries.length > 0
-    ? (temperatureEntries.reduce((sum, entry) => sum + entry.temperature!, 0) / temperatureEntries.length).toFixed(1)
+  // Only count temperature entries that have actual values > 0
+  const actualTemperatureEntries = healthData
+    .filter(entry => entry.temperature !== undefined && entry.temperature > 0)
+    .slice(-7);
+  const avgTemperature = actualTemperatureEntries.length > 0
+    ? (actualTemperatureEntries.reduce((sum, entry) => sum + entry.temperature!, 0) / actualTemperatureEntries.length).toFixed(1)
     : '--';
 
-  const smokingDays = healthData.slice(-7).filter(entry => entry.smoked).length;
+  // Count smoking days from last 7 days
+  const smokingDays = healthData
+    .slice(-7)
+    .filter(entry => entry.smoked === true).length;
+
+  console.log('Weekly averages calculated:', {
+    weightEntries: actualWeightEntries.length,
+    avgWeight,
+    pulseEntries: actualPulseEntries.length,
+    avgPulse,
+    temperatureEntries: actualTemperatureEntries.length,
+    avgTemperature
+  });
 
   return (
     <div className="space-y-6">

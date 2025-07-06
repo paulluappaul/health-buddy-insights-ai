@@ -72,11 +72,22 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
   const todayProtein = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.protein, 0);
   const todayFat = todaysFoodEntries.reduce((sum, entry) => sum + entry.nutrition.fat, 0);
 
-  // Get latest values for today
-  const latestWeight = todaysHealthData.find(d => d.weight !== undefined)?.weight;
-  const latestPulse = todaysHealthData.find(d => d.pulse !== undefined)?.pulse;
-  const latestTemperature = todaysHealthData.find(d => d.temperature !== undefined);
-  const latestBloodPressure = todaysHealthData.find(d => d.bloodPressure !== undefined)?.bloodPressure;
+  // Get latest ACTUAL values for today (not default zeros from dashboard conversion)
+  const latestWeight = todaysHealthData.find(d => d.weight !== undefined && d.weight > 0)?.weight;
+  const latestPulse = todaysHealthData.find(d => d.pulse !== undefined && d.pulse > 0)?.pulse;
+  const latestTemperature = todaysHealthData.find(d => d.temperature !== undefined && d.temperature > 0);
+  const latestBloodPressure = todaysHealthData.find(d => 
+    d.bloodPressure !== undefined && 
+    d.bloodPressure.systolic > 0 && 
+    d.bloodPressure.diastolic > 0
+  )?.bloodPressure;
+
+  console.log('Latest values found:', {
+    weight: latestWeight,
+    pulse: latestPulse,
+    temperature: latestTemperature?.temperature,
+    bloodPressure: latestBloodPressure
+  });
 
   const formatTemperature = (temp: number, unit: string) => {
     if (unit === 'fahrenheit') {
@@ -182,13 +193,13 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      {data.bloodPressure && (
+                      {data.bloodPressure && data.bloodPressure.systolic > 0 && (
                         <span>BP: {data.bloodPressure.systolic}/{data.bloodPressure.diastolic}</span>
                       )}
-                      {data.pulse && <span>Pulse: {data.pulse}</span>}
+                      {data.pulse && data.pulse > 0 && <span>Pulse: {data.pulse}</span>}
                       {data.mood && <span>Mood: {data.mood}</span>}
-                      {data.weight && <span>Weight: {data.weight}kg</span>}
-                      {data.temperature && (
+                      {data.weight && data.weight > 0 && <span>Weight: {data.weight}kg</span>}
+                      {data.temperature && data.temperature > 0 && (
                         <span>Temp: {formatTemperature(data.temperature, data.temperatureUnit!)}</span>
                       )}
                     </div>
