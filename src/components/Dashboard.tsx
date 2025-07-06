@@ -28,6 +28,8 @@ interface HealthData {
   pulse: number;
   mood: string;
   weight: number;
+  temperature: number;
+  temperatureUnit: string;
   smoked: boolean;
   cigaretteCount?: number;
 }

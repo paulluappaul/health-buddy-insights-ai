@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Target, Scale, Heart, Brain } from 'lucide-react';
+import { Target, Scale, Heart, Brain, Thermometer } from 'lucide-react';
 import MetricCard from './MetricCard';
 import NutritionChart from '../charts/NutritionChart';
 import EnhancedWeightChart from '../charts/EnhancedWeightChart';
@@ -30,6 +30,8 @@ interface HealthData {
   pulse?: number;
   mood?: string;
   weight?: number;
+  temperature?: number;
+  temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
 }
@@ -99,11 +101,16 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
     ? Math.round(pulseEntries.reduce((sum, entry) => sum + entry.pulse!, 0) / pulseEntries.length)
     : '--';
 
+  const temperatureEntries = healthData.filter(entry => entry.temperature !== undefined).slice(-7);
+  const avgTemperature = temperatureEntries.length > 0
+    ? (temperatureEntries.reduce((sum, entry) => sum + entry.temperature!, 0) / temperatureEntries.length).toFixed(1)
+    : '--';
+
   const smokingDays = healthData.slice(-7).filter(entry => entry.smoked).length;
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <MetricCard
           icon={Target}
           value={avgCalories}
@@ -121,6 +128,12 @@ const WeeklyView = ({ foodEntries, healthData }: WeeklyViewProps) => {
           value={avgPulse}
           label="Avg Pulse (bpm)"
           colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
+        />
+        <MetricCard
+          icon={Thermometer}
+          value={avgTemperature !== '--' ? `${avgTemperature}°C` : '--'}
+          label="Avg Temperature"
+          colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
         />
         <MetricCard
           icon={Brain}

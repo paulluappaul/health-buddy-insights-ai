@@ -9,6 +9,8 @@ interface HealthData {
   pulse?: number;
   mood?: string;
   weight?: number;
+  temperature?: number;
+  temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
 }
@@ -23,6 +25,8 @@ interface DashboardHealthData {
   pulse: number;
   mood: string;
   weight: number;
+  temperature: number;
+  temperatureUnit: string;
   smoked: boolean;
   cigaretteCount?: number;
 }
@@ -35,6 +39,8 @@ export const convertHealthDataForDashboard = (healthData: HealthData[]): Dashboa
     pulse: data.pulse || 0,
     mood: data.mood || 'neutral',
     weight: data.weight || 0,
+    temperature: data.temperature || 0,
+    temperatureUnit: data.temperatureUnit || 'celsius',
     smoked: data.smoked || false,
     cigaretteCount: data.cigaretteCount
   }));
@@ -56,6 +62,9 @@ export const createHealthEntry = (data: any) => {
     healthEntry.pulse = data.pulse;
   } else if (data.type === 'weight' && data.weight && data.weight > 0) {
     healthEntry.weight = data.weight;
+  } else if (data.type === 'temperature' && data.temperature && data.temperature > 0) {
+    healthEntry.temperature = data.temperature;
+    healthEntry.temperatureUnit = data.unit || 'celsius';
   } else if (data.type === 'mood' && data.mood && data.mood !== '') {
     healthEntry.mood = data.mood;
   } else if (data.type === 'smoking') {
@@ -78,6 +87,8 @@ export const validateHealthValue = (type: string, value: any): boolean => {
       return value > 0 && value >= 30 && value <= 220;
     case 'weight':
       return value > 0 && value >= 20 && value <= 300;
+    case 'temperature':
+      return value > 0 && value >= 30 && value <= 45; // Celsius range
     case 'mood':
       return value && value !== '';
     default:

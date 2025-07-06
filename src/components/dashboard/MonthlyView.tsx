@@ -26,6 +26,8 @@ interface HealthData {
   pulse: number;
   mood: string;
   weight: number;
+  temperature: number;
+  temperatureUnit: string;
   smoked: boolean;
   cigaretteCount?: number;
 }
@@ -60,6 +62,10 @@ const MonthlyView = ({ foodEntries = [], healthData = [] }: MonthlyAnalysisProps
 
   const avgWeight = monthlyHealthData.filter(d => d.weight).length > 0
     ? (monthlyHealthData.filter(d => d.weight).reduce((sum, d) => sum + d.weight, 0) / monthlyHealthData.filter(d => d.weight).length).toFixed(1)
+    : '0';
+
+  const avgTemperature = monthlyHealthData.filter(d => d.temperature && d.temperature > 0).length > 0
+    ? (monthlyHealthData.filter(d => d.temperature && d.temperature > 0).reduce((sum, d) => sum + d.temperature, 0) / monthlyHealthData.filter(d => d.temperature && d.temperature > 0).length).toFixed(1)
     : '0';
 
   const consistencyScore = totalDays > 0 ? Math.round((daysWithData / totalDays) * 100) : 0;
@@ -141,6 +147,10 @@ const MonthlyView = ({ foodEntries = [], healthData = [] }: MonthlyAnalysisProps
                 <div className="flex justify-between">
                   <span className="text-gray-600">Average Weight</span>
                   <span className="font-semibold">{avgWeight} kg</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Average Temperature</span>
+                  <span className="font-semibold">{avgTemperature !== '0' ? `${avgTemperature}°C` : 'No data'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Consistency Score</span>

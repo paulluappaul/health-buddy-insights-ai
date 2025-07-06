@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, Scale, Heart, Calendar } from 'lucide-react';
+import { Target, Scale, Heart, Calendar, Thermometer } from 'lucide-react';
 import MetricCard from './MetricCard';
 
 interface FoodEntry {
@@ -27,6 +27,8 @@ interface HealthData {
   pulse?: number;
   mood?: string;
   weight?: number;
+  temperature?: number;
+  temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
 }
@@ -62,10 +64,18 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
   // Get latest values (not averages) for today
   const latestWeight = todaysHealthData.find(d => d.weight !== undefined)?.weight;
   const latestPulse = todaysHealthData.find(d => d.pulse !== undefined)?.pulse;
+  const latestTemperature = todaysHealthData.find(d => d.temperature !== undefined);
+
+  const formatTemperature = (temp: number, unit: string) => {
+    if (unit === 'fahrenheit') {
+      return `${temp.toFixed(1)}°F`;
+    }
+    return `${temp.toFixed(1)}°C`;
+  };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <MetricCard
           icon={Target}
           value={todayCalories}
@@ -83,6 +93,12 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
           value={latestPulse || '--'}
           label="Latest Pulse (bpm)"
           colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
+        />
+        <MetricCard
+          icon={Thermometer}
+          value={latestTemperature ? formatTemperature(latestTemperature.temperature!, latestTemperature.temperatureUnit!) : '--'}
+          label="Latest Temperature"
+          colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
         />
         <MetricCard
           icon={Calendar}
@@ -147,6 +163,9 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
                       {data.pulse && <span>Pulse: {data.pulse}</span>}
                       {data.mood && <span>Mood: {data.mood}</span>}
                       {data.weight && <span>Weight: {data.weight}kg</span>}
+                      {data.temperature && (
+                        <span>Temp: {formatTemperature(data.temperature, data.temperatureUnit!)}</span>
+                      )}
                     </div>
                   </div>
                 ))}

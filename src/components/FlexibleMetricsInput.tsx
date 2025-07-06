@@ -5,8 +5,9 @@ import BloodPressureInput from './metrics/BloodPressureInput';
 import PulseInput from './metrics/PulseInput';
 import WeightInput from './metrics/WeightInput';
 import MoodInput from './metrics/MoodInput';
+import TemperatureInput from './metrics/TemperatureInput';
 import MedicationInput, { MedicationEntry } from './medication/MedicationInput';
-import { Activity, Heart, Scale, Smile, Shield } from 'lucide-react';
+import { Activity, Heart, Scale, Smile, Shield, Thermometer } from 'lucide-react';
 
 interface FlexibleMetricsInputProps {
   onHealthDataLogged: (data: any) => void;
@@ -33,7 +34,7 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
       </div>
 
       <Tabs defaultValue="vitals" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsList className="grid w-full grid-cols-6 mb-6">
           <TabsTrigger value="vitals" className="flex items-center gap-1">
             <Activity className="h-4 w-4" />
             <span className="hidden sm:inline">Vitals</span>
@@ -45,6 +46,10 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
           <TabsTrigger value="weight" className="flex items-center gap-1">
             <Scale className="h-4 w-4" />
             <span className="hidden sm:inline">Weight</span>
+          </TabsTrigger>
+          <TabsTrigger value="temperature" className="flex items-center gap-1">
+            <Thermometer className="h-4 w-4" />
+            <span className="hidden sm:inline">Temp</span>
           </TabsTrigger>
           <TabsTrigger value="mood" className="flex items-center gap-1">
             <Smile className="h-4 w-4" />
@@ -71,6 +76,12 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
         <TabsContent value="weight" className="space-y-4">
           <WeightInput 
             onDataLogged={(data) => handleMetricLogged('weight', data)}
+          />
+        </TabsContent>
+
+        <TabsContent value="temperature" className="space-y-4">
+          <TemperatureInput 
+            onDataLogged={(data) => handleMetricLogged('temperature', data)}
           />
         </TabsContent>
 

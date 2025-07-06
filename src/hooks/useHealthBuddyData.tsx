@@ -16,6 +16,8 @@ interface HealthData {
   pulse?: number;
   mood?: string;
   weight?: number;
+  temperature?: number;
+  temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
   type?: string;
@@ -71,7 +73,7 @@ export const useHealthBuddyData = () => {
     console.log('Health entry created:', healthEntry);
     
     // Only add the entry if it has meaningful data
-    if (healthEntry.bloodPressure || healthEntry.pulse || healthEntry.mood || healthEntry.weight || healthEntry.smoked !== undefined) {
+    if (healthEntry.bloodPressure || healthEntry.pulse || healthEntry.mood || healthEntry.weight || healthEntry.temperature || healthEntry.smoked !== undefined) {
       setHealthData(prev => [healthEntry, ...prev]);
     } else {
       console.warn('Health entry rejected - no valid data:', healthEntry);
