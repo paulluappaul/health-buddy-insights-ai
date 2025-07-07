@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Target, Scale, Heart, Calendar, Thermometer } from 'lucide-react';
+import { Target, Scale, Heart, Calendar, Thermometer, Cigarette } from 'lucide-react';
 import MetricCard from './MetricCard';
 
 interface TodaysMetricsProps {
@@ -12,6 +12,7 @@ interface TodaysMetricsProps {
     temperatureUnit: string;
   };
   todaysHealthDataCount: number;
+  todayCigarettes: number;
 }
 
 const TodaysMetrics = ({
@@ -19,7 +20,8 @@ const TodaysMetrics = ({
   latestWeight,
   latestPulse,
   latestTemperature,
-  todaysHealthDataCount
+  todaysHealthDataCount,
+  todayCigarettes
 }: TodaysMetricsProps) => {
   const formatTemperature = (temp: number, unit: string) => {
     if (unit === 'fahrenheit') {
@@ -29,7 +31,7 @@ const TodaysMetrics = ({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
       <MetricCard
         icon={Target}
         value={todayCalories}
@@ -59,6 +61,12 @@ const TodaysMetrics = ({
         value={todaysHealthDataCount}
         label="Health Entries"
         colorClass="bg-gradient-to-br from-emerald-500 to-teal-600"
+      />
+      <MetricCard
+        icon={Cigarette}
+        value={todayCigarettes}
+        label="Today's Cigarettes"
+        colorClass="bg-gradient-to-br from-amber-500 to-orange-600"
       />
     </div>
   );

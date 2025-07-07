@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Heart, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface HealthData {
   id: string;
@@ -21,14 +23,22 @@ interface HealthData {
 
 interface HealthMetricsSummaryProps {
   todaysHealthData: HealthData[];
+  onDeleteEntry?: (entryId: string) => void;
 }
 
-const HealthMetricsSummary = ({ todaysHealthData }: HealthMetricsSummaryProps) => {
+const HealthMetricsSummary = ({ todaysHealthData, onDeleteEntry }: HealthMetricsSummaryProps) => {
   const formatTemperature = (temp: number, unit: string) => {
     if (unit === 'fahrenheit') {
       return `${temp.toFixed(1)}°F`;
     }
     return `${temp.toFixed(1)}°C`;
+  };
+
+  const handleDeleteEntry = (entryId: string) => {
+    if (onDeleteEntry) {
+      onDeleteEntry(entryId);
+      toast.success('Health entry deleted');
+    }
   };
 
   return (
@@ -46,9 +56,21 @@ const HealthMetricsSummary = ({ todaysHealthData }: HealthMetricsSummaryProps) =
               <div key={data.id} className="bg-gray-50 rounded-lg p-3">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Entry #{index + 1}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(data.date).toLocaleTimeString()}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {new Date(data.date).toLocaleTimeString()}
+                    </span>
+                    {onDeleteEntry && (
+                      <Button
+                        onClick={() => handleDeleteEntry(data.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   {data.bloodPressure && data.bloodPressure.systolic > 0 && (

@@ -129,6 +129,10 @@ export const useHealthBuddyData = () => {
     setMedications(prev => [...processedMedications, ...prev]);
   };
 
+  const handleDeleteHealthEntry = (entryId: string) => {
+    setHealthData(prev => prev.filter(entry => entry.id !== entryId));
+  };
+
   return {
     foodEntries,
     healthData: convertHealthDataForDashboard(healthData),
@@ -137,6 +141,7 @@ export const useHealthBuddyData = () => {
     handleFoodLogged,
     handleHealthDataLogged,
     handleMedicationLogged,
-    handleDataImported
+    handleDataImported,
+    handleDeleteHealthEntry
   };
 };

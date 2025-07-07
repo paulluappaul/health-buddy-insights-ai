@@ -1,11 +1,9 @@
 
 import React from 'react';
-import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import TodaysMetrics from './TodaysMetrics';
 import NutritionBreakdown from './NutritionBreakdown';
 import HealthMetricsSummary from './HealthMetricsSummary';
-import { clearAllData } from '@/utils/localStorage';
+
 
 interface FoodEntry {
   id: string;
@@ -39,9 +37,10 @@ interface HealthData {
 interface DailyViewProps {
   foodEntries: FoodEntry[];
   healthData: HealthData[];
+  onDeleteHealthEntry?: (entryId: string) => void;
 }
 
-const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
+const DailyView = ({ foodEntries, healthData, onDeleteHealthEntry }: DailyViewProps) => {
   const today = new Date();
   const todayString = today.toDateString();
   
@@ -83,6 +82,11 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
     d.bloodPressure.diastolic > 0
   )?.bloodPressure;
 
+  // Calculate today's cigarettes
+  const todayCigarettes = todaysHealthData.reduce((sum, entry) => {
+    return sum + (entry.smoked ? (entry.cigaretteCount || 0) : 0);
+  }, 0);
+
   console.log('Latest values found:', {
     weight: latestWeight,
     pulse: latestPulse,
@@ -94,15 +98,6 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
     <div className="space-y-6 px-2 sm:px-0">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">Today's Overview</h2>
-        <Button 
-          onClick={clearAllData}
-          variant="destructive" 
-          size="sm"
-          className="flex items-center gap-2 w-full sm:w-auto"
-        >
-          <Trash2 className="h-4 w-4" />
-          Clear All Data
-        </Button>
       </div>
 
       <TodaysMetrics
@@ -114,6 +109,7 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
           temperatureUnit: latestTemperature.temperatureUnit!
         } : undefined}
         todaysHealthDataCount={todaysHealthData.length}
+        todayCigarettes={todayCigarettes}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -123,7 +119,10 @@ const DailyView = ({ foodEntries, healthData }: DailyViewProps) => {
           todayProtein={todayProtein}
           todayFat={todayFat}
         />
-        <HealthMetricsSummary todaysHealthData={todaysHealthData} />
+        <HealthMetricsSummary 
+          todaysHealthData={todaysHealthData} 
+          onDeleteEntry={onDeleteHealthEntry}
+        />
       </div>
     </div>
   );

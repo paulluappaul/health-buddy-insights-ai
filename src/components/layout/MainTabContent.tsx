@@ -35,6 +35,7 @@ interface MainTabContentProps {
   onHealthDataLogged: (data: any) => void;
   onMedicationLogged: (medication: MedicationEntry) => void;
   onDataImported: (data: ExportData) => void;
+  onDeleteHealthEntry?: (entryId: string) => void;
 }
 
 const MainTabContent = ({
@@ -45,7 +46,8 @@ const MainTabContent = ({
   onFoodLogged,
   onHealthDataLogged,
   onMedicationLogged,
-  onDataImported
+  onDataImported,
+  onDeleteHealthEntry
 }: MainTabContentProps) => {
   return (
     <>
@@ -70,7 +72,8 @@ const MainTabContent = ({
       <TabsContent value="dashboard">
         <Dashboard 
           foodEntries={foodEntries} 
-          healthData={healthData} 
+          healthData={healthData}
+          onDeleteHealthEntry={onDeleteHealthEntry}
         />
       </TabsContent>
 

@@ -45,6 +45,7 @@ const TabularDataView = ({ foodEntries, healthData }: TabularDataViewProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
+  const [isLandscape, setIsLandscape] = useState(false);
 
   // Combine and format all data for table display
   const formatTableData = () => {
@@ -160,13 +161,23 @@ const TabularDataView = ({ foodEntries, healthData }: TabularDataViewProps) => {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-blue-600" />
-          Complete Data Table
-        </CardTitle>
-      </CardHeader>
+    <div className={isLandscape ? 'fixed inset-0 z-50 bg-white overflow-auto' : ''}>
+      <Card className={isLandscape ? 'h-full rounded-none' : ''}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-blue-600" />
+              Complete Data Table
+            </div>
+            <Button
+              onClick={() => setIsLandscape(!isLandscape)}
+              variant="outline"
+              size="sm"
+            >
+              {isLandscape ? 'Exit Landscape' : 'Landscape View'}
+            </Button>
+          </CardTitle>
+        </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
@@ -270,6 +281,7 @@ const TabularDataView = ({ foodEntries, healthData }: TabularDataViewProps) => {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 
