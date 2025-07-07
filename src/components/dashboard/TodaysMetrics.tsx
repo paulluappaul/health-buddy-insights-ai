@@ -34,31 +34,31 @@ const TodaysMetrics = ({
         icon={Target}
         value={todayCalories}
         label="Today's Calories"
-        colorClass="from-orange-50 to-red-50 border-orange-200 text-orange-700"
+        colorClass="bg-gradient-to-br from-orange-500 to-red-500"
       />
       <MetricCard
         icon={Scale}
         value={latestWeight ? latestWeight.toFixed(1) : '--'}
         label="Latest Weight (kg)"
-        colorClass="from-blue-50 to-indigo-50 border-blue-200 text-blue-700"
+        colorClass="bg-gradient-to-br from-blue-500 to-indigo-600"
       />
       <MetricCard
         icon={Heart}
         value={latestPulse || '--'}
         label="Latest Pulse (bpm)"
-        colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
+        colorClass="bg-gradient-to-br from-pink-500 to-rose-600"
       />
       <MetricCard
         icon={Thermometer}
         value={latestTemperature ? formatTemperature(latestTemperature.temperature, latestTemperature.temperatureUnit) : '--'}
         label="Latest Temperature"
-        colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
+        colorClass="bg-gradient-to-br from-red-500 to-orange-500"
       />
       <MetricCard
         icon={Calendar}
         value={todaysHealthDataCount}
         label="Health Entries"
-        colorClass="from-green-50 to-emerald-50 border-green-200 text-green-700"
+        colorClass="bg-gradient-to-br from-emerald-500 to-teal-600"
       />
     </div>
   );
