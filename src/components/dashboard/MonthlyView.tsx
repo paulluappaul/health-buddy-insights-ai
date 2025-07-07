@@ -1,7 +1,15 @@
 
 import React from 'react';
+import { Target, Scale, Heart, Brain, Thermometer } from 'lucide-react';
+import MetricCard from './MetricCard';
+import EnhancedWeightChart from '../charts/EnhancedWeightChart';
+import MoodChart from '../charts/MoodChart';
+import CigaretteChart from '../charts/CigaretteChart';
+import PulseChart from '../charts/PulseChart';
+import BloodPressureChart from '../charts/BloodPressureChart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, TrendingUp, Target, Award } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 interface FoodEntry {
   id: string;
@@ -19,184 +27,225 @@ interface FoodEntry {
 interface HealthData {
   id: string;
   date: Date;
-  bloodPressure: {
+  bloodPressure?: {
     systolic: number;
     diastolic: number;
   };
-  pulse: number;
-  mood: string;
-  weight: number;
-  temperature: number;
-  temperatureUnit: string;
-  smoked: boolean;
+  pulse?: number;
+  mood?: string;
+  weight?: number;
+  temperature?: number;
+  temperatureUnit?: string;
+  smoked?: boolean;
   cigaretteCount?: number;
 }
 
-interface MonthlyAnalysisProps {
-  foodEntries?: FoodEntry[];
-  healthData?: HealthData[];
+interface MonthlyViewProps {
+  foodEntries: FoodEntry[];
+  healthData: HealthData[];
 }
 
-const MonthlyView = ({ foodEntries = [], healthData = [] }: MonthlyAnalysisProps) => {
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+const MonthlyView = ({ foodEntries, healthData }: MonthlyViewProps) => {
+  // Process data for charts - last 30 days, grouped by week
+  const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    return date;
+  }).reverse();
 
-  // Filter data for last 30 days
-  const monthlyFoodEntries = foodEntries.filter(entry => 
-    new Date(entry.timestamp) >= thirtyDaysAgo
-  );
-  
-  const monthlyHealthData = healthData.filter(entry => 
-    new Date(entry.date) >= thirtyDaysAgo
-  );
+  // Group by weeks
+  const weeklyData = [];
+  for (let i = 0; i < 30; i += 7) {
+    const weekStart = last30Days[i];
+    const weekEnd = last30Days[Math.min(i + 6, 29)];
+    const weekNumber = Math.floor(i / 7) + 1;
+    
+    const weekFoodEntries = foodEntries.filter(entry => {
+      const entryDate = new Date(entry.timestamp);
+      return entryDate >= weekStart && entryDate <= weekEnd;
+    });
+    
+    const weekHealthData = healthData.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate >= weekStart && entryDate <= weekEnd;
+    });
 
-  // Calculate monthly insights
-  const totalDays = monthlyHealthData.length > 0 ? 30 : 0;
-  const daysWithData = new Set(monthlyHealthData.map(d => 
-    new Date(d.date).toDateString()
-  )).size;
+    // Calculate weekly averages
+    weeklyData.push({
+      week: `Week ${weekNumber}`,
+      calories: weekFoodEntries.length > 0 
+        ? Math.round(weekFoodEntries.reduce((sum, entry) => sum + entry.nutrition.calories, 0) / weekFoodEntries.length)
+        : 0,
+      weight: weekHealthData.filter(d => d.weight && d.weight > 0).length > 0
+        ? weekHealthData.filter(d => d.weight && d.weight > 0).reduce((sum, d) => sum + d.weight!, 0) / weekHealthData.filter(d => d.weight && d.weight > 0).length
+        : 0,
+      cigarettes: weekHealthData.reduce((sum, d) => sum + (d.cigaretteCount || 0), 0),
+      smoked: weekHealthData.some(d => d.smoked),
+      pulse: weekHealthData.filter(d => d.pulse && d.pulse > 0).length > 0
+        ? Math.round(weekHealthData.filter(d => d.pulse && d.pulse > 0).reduce((sum, d) => sum + d.pulse!, 0) / weekHealthData.filter(d => d.pulse && d.pulse > 0).length)
+        : 0,
+      systolic: weekHealthData.filter(d => d.bloodPressure && d.bloodPressure.systolic > 0).length > 0
+        ? Math.round(weekHealthData.filter(d => d.bloodPressure && d.bloodPressure.systolic > 0).reduce((sum, d) => sum + d.bloodPressure!.systolic, 0) / weekHealthData.filter(d => d.bloodPressure && d.bloodPressure.systolic > 0).length)
+        : 0,
+      diastolic: weekHealthData.filter(d => d.bloodPressure && d.bloodPressure.diastolic > 0).length > 0
+        ? Math.round(weekHealthData.filter(d => d.bloodPressure && d.bloodPressure.diastolic > 0).reduce((sum, d) => sum + d.bloodPressure!.diastolic, 0) / weekHealthData.filter(d => d.bloodPressure && d.bloodPressure.diastolic > 0).length)
+        : 0
+    });
+  }
+
+  // Monthly calories data
+  const monthlyCalories = weeklyData.map(week => ({
+    date: week.week,
+    calories: week.calories
+  }));
+
+  // Monthly weight data
+  const monthlyWeight = weeklyData
+    .filter(week => week.weight > 0)
+    .map(week => ({
+      day: week.week,
+      weight: week.weight
+    }));
+
+  // Monthly cigarette data
+  const monthlyCigarettes = weeklyData.map(week => ({
+    date: week.week,
+    cigarettes: week.cigarettes,
+    smoked: week.smoked
+  }));
+
+  // Monthly pulse data
+  const monthlyPulse = weeklyData
+    .filter(week => week.pulse > 0)
+    .map(week => ({
+      date: week.week,
+      pulse: week.pulse
+    }));
+
+  // Monthly blood pressure data
+  const monthlyBloodPressure = weeklyData
+    .filter(week => week.systolic > 0)
+    .map(week => ({
+      date: week.week,
+      systolic: week.systolic,
+      diastolic: week.diastolic
+    }));
+
+  // Mood distribution for the month
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 30);
   
+  const moodCounts = healthData
+    .filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entry.mood && entry.mood !== '' && entryDate >= monthAgo;
+    })
+    .reduce((acc, entry) => {
+      if (entry.mood) {
+        acc[entry.mood] = (acc[entry.mood] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+  const moodData = Object.entries(moodCounts).map(([mood, count]) => ({
+    name: mood.charAt(0).toUpperCase() + mood.slice(1),
+    value: count
+  }));
+
+  // Calculate monthly averages
+  const monthlyFoodEntries = foodEntries.filter(entry => {
+    const entryDate = new Date(entry.timestamp);
+    return entryDate >= monthAgo;
+  });
   const avgCalories = monthlyFoodEntries.length > 0 
     ? Math.round(monthlyFoodEntries.reduce((sum, entry) => sum + entry.nutrition.calories, 0) / monthlyFoodEntries.length)
     : 0;
 
-  const avgWeight = monthlyHealthData.filter(d => d.weight).length > 0
-    ? (monthlyHealthData.filter(d => d.weight).reduce((sum, d) => sum + d.weight, 0) / monthlyHealthData.filter(d => d.weight).length).toFixed(1)
-    : '0';
+  const monthlyHealthEntries = healthData.filter(entry => {
+    const entryDate = new Date(entry.date);
+    return entryDate >= monthAgo;
+  });
 
-  const avgTemperature = monthlyHealthData.filter(d => d.temperature && d.temperature > 0).length > 0
-    ? (monthlyHealthData.filter(d => d.temperature && d.temperature > 0).reduce((sum, d) => sum + d.temperature, 0) / monthlyHealthData.filter(d => d.temperature && d.temperature > 0).length).toFixed(1)
-    : '0';
+  const actualWeightEntries = monthlyHealthEntries.filter(entry => entry.weight && entry.weight > 0);
+  const avgWeight = actualWeightEntries.length > 0
+    ? (actualWeightEntries.reduce((sum, entry) => sum + entry.weight!, 0) / actualWeightEntries.length).toFixed(1)
+    : '--';
 
-  const consistencyScore = totalDays > 0 ? Math.round((daysWithData / totalDays) * 100) : 0;
+  const actualPulseEntries = monthlyHealthEntries.filter(entry => entry.pulse && entry.pulse > 0);
+  const avgPulse = actualPulseEntries.length > 0
+    ? Math.round(actualPulseEntries.reduce((sum, entry) => sum + entry.pulse!, 0) / actualPulseEntries.length)
+    : '--';
 
-  // Mood analysis
-  const moodCounts = monthlyHealthData.reduce((acc, d) => {
-    acc[d.mood] = (acc[d.mood] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const actualTemperatureEntries = monthlyHealthEntries.filter(entry => entry.temperature && entry.temperature > 0);
+  const avgTemperature = actualTemperatureEntries.length > 0
+    ? (actualTemperatureEntries.reduce((sum, entry) => sum + entry.temperature!, 0) / actualTemperatureEntries.length).toFixed(1)
+    : '--';
 
-  const dominantMood = Object.entries(moodCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'neutral';
-
-  const insights = [
-    {
-      title: "Tracking Consistency",
-      value: `${consistencyScore}%`,
-      description: `You logged data on ${daysWithData} out of ${totalDays} days`,
-      icon: Target,
-      color: consistencyScore >= 80 ? 'text-green-600' : consistencyScore >= 60 ? 'text-yellow-600' : 'text-red-600'
-    },
-    {
-      title: "Average Daily Calories",
-      value: avgCalories.toString(),
-      description: "Based on your food tracking",
-      icon: TrendingUp,
-      color: 'text-blue-600'
-    },
-    {
-      title: "Dominant Mood",
-      value: dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1),
-      description: `Most common mood this month`,
-      icon: Award,
-      color: 'text-purple-600'
-    }
-  ];
+  const smokingDays = monthlyHealthEntries.filter(entry => entry.smoked === true).length;
 
   return (
-    <div className="space-y-6">
-      {monthlyHealthData.length > 0 ? (
-        <>
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-700">
-                <CalendarDays className="h-5 w-5" />
-                Monthly Health Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {insights.map((insight, index) => {
-                  const Icon = insight.icon;
-                  return (
-                    <div key={index} className="text-center">
-                      <Icon className={`h-8 w-8 mx-auto mb-2 ${insight.color}`} />
-                      <p className="text-2xl font-bold text-gray-800">{insight.value}</p>
-                      <p className="text-sm font-medium text-gray-700">{insight.title}</p>
-                      <p className="text-xs text-gray-600 mt-1">{insight.description}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="space-y-6 px-2 sm:px-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <MetricCard
+          icon={Target}
+          value={avgCalories}
+          label="Avg Daily Calories"
+          colorClass="from-orange-50 to-red-50 border-orange-200 text-orange-700"
+        />
+        <MetricCard
+          icon={Scale}
+          value={avgWeight}
+          label="Avg Weight (kg)"
+          colorClass="from-blue-50 to-indigo-50 border-blue-200 text-blue-700"
+        />
+        <MetricCard
+          icon={Heart}
+          value={avgPulse}
+          label="Avg Pulse (bpm)"
+          colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
+        />
+        <MetricCard
+          icon={Thermometer}
+          value={avgTemperature !== '--' ? `${avgTemperature}°C` : '--'}
+          label="Avg Temperature"
+          colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
+        />
+        <MetricCard
+          icon={Brain}
+          value={smokingDays}
+          label="Smoking Days"
+          colorClass="from-yellow-50 to-orange-50 border-yellow-200 text-yellow-700"
+        />
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Health Tracking Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Health Entries</span>
-                  <span className="font-semibold">{monthlyHealthData.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Days with Data</span>
-                  <span className="font-semibold">{daysWithData} / 30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Average Weight</span>
-                  <span className="font-semibold">{avgWeight} kg</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Average Temperature</span>
-                  <span className="font-semibold">{avgTemperature !== '0' ? `${avgTemperature}°C` : 'No data'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Consistency Score</span>
-                  <span className={`font-semibold ${consistencyScore >= 80 ? 'text-green-600' : consistencyScore >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {consistencyScore}%
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Nutrition Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Food Entries</span>
-                  <span className="font-semibold">{monthlyFoodEntries.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Avg Daily Calories</span>
-                  <span className="font-semibold">{avgCalories}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Most Dominant Mood</span>
-                  <span className="font-semibold capitalize">{dominantMood}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tracking Streak</span>
-                  <span className="font-semibold">{daysWithData} days</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      ) : (
-        <Card className="p-6">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-700 mb-4">Monthly Health Analysis</h3>
-            <p className="text-gray-600">
-              Comprehensive monthly trends and detailed analysis will be available once you have more data logged.
-              Keep tracking your daily metrics to unlock detailed monthly insights, correlations, and personalized health recommendations!
-            </p>
-          </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Monthly Calories Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-orange-600" />
+              Monthly Calories Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthlyCalories}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip formatter={(value: number) => [`${value} kcal`, 'Calories']} />
+                <Line type="monotone" dataKey="calories" stroke="#F97316" strokeWidth={2} name="Calories" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
-      )}
+
+        {monthlyWeight.length > 0 && <EnhancedWeightChart data={monthlyWeight} />}
+        <CigaretteChart data={monthlyCigarettes} title="Monthly Cigarette Tracking" />
+        {monthlyPulse.length > 0 && <PulseChart data={monthlyPulse} />}
+        {monthlyBloodPressure.length > 0 && <BloodPressureChart data={monthlyBloodPressure} />}
+        {moodData.length > 0 && <MoodChart data={moodData} />}
+      </div>
     </div>
   );
 };
