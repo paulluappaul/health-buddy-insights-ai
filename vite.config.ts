@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     watch: {
-      usePolling: false,
+      usePolling: true,
+      interval: 1000,
+      binaryInterval: 1000,
       ignored: [
         '**/node_modules/**',
         '**/.git/**',
@@ -22,7 +24,12 @@ export default defineConfig(({ mode }) => ({
         '**/.vscode/**',
         '**/.idea/**',
         '**/tmp/**',
-        '**/temp/**'
+        '**/temp/**',
+        '**/logs/**',
+        '**/*.log',
+        '**/package-lock.json',
+        '**/yarn.lock',
+        '**/bun.lockb'
       ]
     }
   },
