@@ -13,6 +13,10 @@ interface HealthData {
   temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
+  painLevel?: number;
+  painNotes?: string;
+  movementLevel?: string;
+  sport?: boolean;
 }
 
 interface DashboardHealthData {
@@ -29,6 +33,10 @@ interface DashboardHealthData {
   temperatureUnit: string;
   smoked: boolean;
   cigaretteCount?: number;
+  painLevel?: number;
+  painNotes?: string;
+  movementLevel?: string;
+  sport?: boolean;
 }
 
 export const convertHealthDataForDashboard = (healthData: HealthData[]): DashboardHealthData[] => {
@@ -42,7 +50,11 @@ export const convertHealthDataForDashboard = (healthData: HealthData[]): Dashboa
     temperature: data.temperature || 0,
     temperatureUnit: data.temperatureUnit || 'celsius',
     smoked: data.smoked || false,
-    cigaretteCount: data.cigaretteCount
+    cigaretteCount: data.cigaretteCount,
+    painLevel: data.painLevel,
+    painNotes: data.painNotes,
+    movementLevel: data.movementLevel,
+    sport: data.sport
   }));
 };
 
@@ -95,6 +107,15 @@ export const createHealthEntry = (data: any): HealthData => {
     if (data.cigaretteCount && data.cigaretteCount > 0) {
       healthEntry.cigaretteCount = data.cigaretteCount;
     }
+  } else if (data.type === 'pain' && data.painLevel && data.painLevel > 0) {
+    healthEntry.painLevel = data.painLevel;
+    if (data.notes) {
+      healthEntry.painNotes = data.notes;
+    }
+  } else if (data.type === 'movement' && data.movementLevel) {
+    healthEntry.movementLevel = data.movementLevel;
+  } else if (data.type === 'sport') {
+    healthEntry.sport = data.sport;
   }
 
   console.log('Created clean health entry:', healthEntry);

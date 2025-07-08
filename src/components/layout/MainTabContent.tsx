@@ -24,6 +24,10 @@ interface HealthData {
   temperatureUnit: string;
   smoked: boolean;
   cigaretteCount?: number;
+  painLevel?: number;
+  painNotes?: string;
+  movementLevel?: string;
+  sport?: boolean;
 }
 
 interface MainTabContentProps {

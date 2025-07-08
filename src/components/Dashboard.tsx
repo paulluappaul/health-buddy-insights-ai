@@ -5,6 +5,7 @@ import DailyView from './dashboard/DailyView';
 import WeeklyView from './dashboard/WeeklyView';
 import MonthlyView from './dashboard/MonthlyView';
 import TabularDataView from './data/TabularDataView';
+import PainTableView from './data/PainTableView';
 import DailyDataSelector from './dashboard/DailyDataSelector';
 
 interface FoodEntry {
@@ -34,6 +35,10 @@ interface HealthData {
   temperatureUnit: string;
   smoked: boolean;
   cigaretteCount?: number;
+  painLevel?: number;
+  painNotes?: string;
+  movementLevel?: string;
+  sport?: boolean;
 }
 
 interface DashboardProps {
@@ -51,6 +56,7 @@ const Dashboard = ({ foodEntries, healthData, onDeleteHealthEntry }: DashboardPr
           <TabsTrigger value="weekly" className="flex-shrink-0 px-4 py-2 text-sm">Weekly</TabsTrigger>
           <TabsTrigger value="monthly" className="flex-shrink-0 px-4 py-2 text-sm">Monthly</TabsTrigger>
           <TabsTrigger value="data" className="flex-shrink-0 px-4 py-2 text-sm">Data Table</TabsTrigger>
+          <TabsTrigger value="pain" className="flex-shrink-0 px-4 py-2 text-sm">Pain Table</TabsTrigger>
           <TabsTrigger value="selector" className="flex-shrink-0 px-4 py-2 text-sm">Daily Selector</TabsTrigger>
         </TabsList>
         
@@ -72,6 +78,10 @@ const Dashboard = ({ foodEntries, healthData, onDeleteHealthEntry }: DashboardPr
         
         <TabsContent value="data" className="space-y-6">
           <TabularDataView foodEntries={foodEntries} healthData={healthData} />
+        </TabsContent>
+        
+        <TabsContent value="pain" className="space-y-6">
+          <PainTableView healthData={healthData} />
         </TabsContent>
         
         <TabsContent value="selector" className="space-y-6">

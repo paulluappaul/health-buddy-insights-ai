@@ -20,6 +20,10 @@ interface HealthData {
   temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
+  painLevel?: number;
+  painNotes?: string;
+  movementLevel?: string;
+  sport?: boolean;
   type?: string;
 }
 
@@ -85,7 +89,10 @@ export const useHealthBuddyData = () => {
                           healthEntry.mood || 
                           healthEntry.weight || 
                           healthEntry.temperature || 
-                          healthEntry.smoked !== undefined;
+                          healthEntry.smoked !== undefined ||
+                          healthEntry.painLevel ||
+                          healthEntry.movementLevel ||
+                          healthEntry.sport;
       
       if (hasValidData) {
         setHealthData(prev => {

@@ -32,6 +32,10 @@ interface HealthData {
   temperatureUnit?: string;
   smoked?: boolean;
   cigaretteCount?: number;
+  painLevel?: number;
+  painNotes?: string;
+  movementLevel?: string;
+  sport?: boolean;
 }
 
 interface DailyViewProps {
@@ -81,10 +85,17 @@ const DailyView = ({ foodEntries, healthData, onDeleteHealthEntry }: DailyViewPr
     d.bloodPressure.systolic > 0 && 
     d.bloodPressure.diastolic > 0
   )?.bloodPressure;
+  const latestPainLevel = todaysHealthData.find(d => d.painLevel !== undefined && d.painLevel > 0)?.painLevel;
+  const latestMovementLevel = todaysHealthData.find(d => d.movementLevel !== undefined)?.movementLevel;
 
   // Calculate today's cigarettes
   const todayCigarettes = todaysHealthData.reduce((sum, entry) => {
     return sum + (entry.smoked ? (entry.cigaretteCount || 0) : 0);
+  }, 0);
+
+  // Calculate sport activities
+  const sportActivities = todaysHealthData.reduce((sum, entry) => {
+    return sum + (entry.sport ? 1 : 0);
   }, 0);
 
   console.log('Latest values found:', {
@@ -110,6 +121,9 @@ const DailyView = ({ foodEntries, healthData, onDeleteHealthEntry }: DailyViewPr
         } : undefined}
         todaysHealthDataCount={todaysHealthData.length}
         todayCigarettes={todayCigarettes}
+        latestPainLevel={latestPainLevel}
+        latestMovementLevel={latestMovementLevel}
+        sportActivities={sportActivities}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

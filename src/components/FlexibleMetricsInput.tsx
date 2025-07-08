@@ -7,8 +7,10 @@ import WeightInput from './metrics/WeightInput';
 import MoodInput from './metrics/MoodInput';
 import TemperatureInput from './metrics/TemperatureInput';
 import SmokingInput from './metrics/SmokingInput';
+import PainInput from './metrics/PainInput';
+import MovementInput from './metrics/MovementInput';
 import MedicationInput, { MedicationEntry } from './medication/MedicationInput';
-import { Activity, Heart, Scale, Smile, Shield, Thermometer, Cigarette } from 'lucide-react';
+import { Activity, Heart, Scale, Smile, Shield, Thermometer, Cigarette, Footprints } from 'lucide-react';
 
 interface FlexibleMetricsInputProps {
   onHealthDataLogged: (data: any) => void;
@@ -35,7 +37,7 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
       </div>
 
       <Tabs defaultValue="vitals" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 mb-6 h-auto">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 mb-6 h-auto">
           <TabsTrigger value="vitals" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Activity className="h-4 w-4" />
             <span className="text-xs sm:text-sm">Vitals</span>
@@ -59,6 +61,14 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
           <TabsTrigger value="smoking" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Cigarette className="h-4 w-4" />
             <span className="text-xs sm:text-sm">Smoking</span>
+          </TabsTrigger>
+          <TabsTrigger value="pain" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
+            <Activity className="h-4 w-4" />
+            <span className="text-xs sm:text-sm">Pain</span>
+          </TabsTrigger>
+          <TabsTrigger value="movement" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
+            <Footprints className="h-4 w-4" />
+            <span className="text-xs sm:text-sm">Movement</span>
           </TabsTrigger>
           <TabsTrigger value="medication" className="flex flex-col sm:flex-row items-center gap-1 p-2 sm:p-3">
             <Shield className="h-4 w-4" />
@@ -99,6 +109,24 @@ const FlexibleMetricsInput = ({ onHealthDataLogged, onMedicationLogged }: Flexib
         <TabsContent value="smoking" className="space-y-4">
           <SmokingInput 
             onDataLogged={(data) => handleMetricLogged('smoking', data)}
+          />
+        </TabsContent>
+
+        <TabsContent value="pain" className="space-y-4">
+          <PainInput 
+            onDataLogged={(data) => handleMetricLogged('pain', data)}
+          />
+        </TabsContent>
+
+        <TabsContent value="movement" className="space-y-4">
+          <MovementInput 
+            onDataLogged={(data: any) => {
+              if ('sport' in data && data.sport) {
+                handleMetricLogged('sport', data);
+              } else {
+                handleMetricLogged('movement', data);
+              }
+            }}
           />
         </TabsContent>
 
