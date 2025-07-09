@@ -43,6 +43,23 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
     { value: 'monthly', label: 'Monthly' }
   ];
 
+  const commonMedications = [
+    { name: 'Aspirin', dosage: '100mg', frequency: 'once-daily' },
+    { name: 'Ibuprofen', dosage: '400mg', frequency: 'as-needed' },
+    { name: 'Paracetamol', dosage: '500mg', frequency: 'as-needed' },
+    { name: 'Omeprazole', dosage: '20mg', frequency: 'once-daily' },
+    { name: 'Metformin', dosage: '500mg', frequency: 'twice-daily' },
+    { name: 'Lisinopril', dosage: '10mg', frequency: 'once-daily' },
+    { name: 'Simvastatin', dosage: '20mg', frequency: 'once-daily' },
+    { name: 'Vitamin D3', dosage: '1000 IU', frequency: 'once-daily' }
+  ];
+
+  const handleQuickEntry = (medication: typeof commonMedications[0]) => {
+    setName(medication.name);
+    setDosage(medication.dosage);
+    setFrequency(medication.frequency);
+  };
+
   const handleSubmit = () => {
     if (!name || !dosage || !frequency) {
       toast({
@@ -99,6 +116,26 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
           onTimeChange={setSelectedTime}
           label="Medication Time"
         />
+
+        <div>
+          <Label className="text-sm text-gray-600 mb-2 block">Quick Entry</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            {commonMedications.map((med, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickEntry(med)}
+                className="text-xs h-auto py-2 px-2 hover:bg-purple-50 hover:border-purple-300"
+              >
+                <div className="text-center">
+                  <div className="font-medium">{med.name}</div>
+                  <div className="text-gray-500">{med.dosage}</div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

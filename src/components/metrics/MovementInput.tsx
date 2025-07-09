@@ -79,9 +79,15 @@ const MovementInput = ({ onDataLogged }: MovementInputProps) => {
   };
 
   const movementOptions = [
-    { value: 'mostly-laying', label: 'Mostly laying' },
-    { value: 'sitting', label: 'Sitting' },
-    { value: 'more-walking', label: 'More walking' }
+    { value: 'bed-rest', label: 'Bed rest / mostly laying' },
+    { value: 'minimal', label: 'Minimal movement (sitting mostly)' },
+    { value: 'light-walking', label: 'Light walking (few times)' },
+    { value: 'moderate-walking', label: 'Moderate walking (several times)' },
+    { value: 'active-walking', label: 'Active walking (regularly)' },
+    { value: 'light-exercise', label: 'Light exercise' },
+    { value: 'moderate-exercise', label: 'Moderate exercise' },
+    { value: 'intense-exercise', label: 'Intense exercise' },
+    { value: 'very-active', label: 'Very active day' }
   ];
 
   return (

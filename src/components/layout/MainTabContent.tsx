@@ -6,6 +6,7 @@ import MedicationDashboard from '@/components/medication/MedicationDashboard';
 import DataManagement from '@/components/DataManagement';
 import FoodTrackingTab from '@/components/tabs/FoodTrackingTab';
 import MetricsTab from '@/components/tabs/MetricsTab';
+import HealthAnalysisChat from '@/components/ai/HealthAnalysisChat';
 import { FoodEntry } from '@/types/nutrition';
 import { MedicationEntry } from '@/components/medication/MedicationInput';
 import { ExportData } from '@/utils/dataManager';
@@ -71,6 +72,15 @@ const MainTabContent = ({
 
       <TabsContent value="medications" className="space-y-6">
         <MedicationDashboard medications={medications} />
+      </TabsContent>
+
+      <TabsContent value="ai-analysis" className="space-y-6">
+        <HealthAnalysisChat 
+          healthData={healthData}
+          foodEntries={foodEntries}
+          medications={medications}
+          apiKey={localStorage.getItem('gemini-api-key') || ''}
+        />
       </TabsContent>
 
       <TabsContent value="dashboard">
