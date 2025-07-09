@@ -185,38 +185,50 @@ const MonthlyView = ({ foodEntries, healthData }: MonthlyViewProps) => {
 
   return (
     <div className="space-y-6 px-2 sm:px-0">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <MetricCard
-          icon={Target}
-          value={avgCalories}
-          label="Avg Daily Calories"
-          colorClass="from-orange-50 to-red-50 border-orange-200 text-orange-700"
-        />
-        <MetricCard
-          icon={Scale}
-          value={avgWeight}
-          label="Avg Weight (kg)"
-          colorClass="from-blue-50 to-indigo-50 border-blue-200 text-blue-700"
-        />
-        <MetricCard
-          icon={Heart}
-          value={avgPulse}
-          label="Avg Pulse (bpm)"
-          colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
-        />
-        <MetricCard
-          icon={Thermometer}
-          value={avgTemperature !== '--' ? `${avgTemperature}°C` : '--'}
-          label="Avg Temperature"
-          colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
-        />
-        <MetricCard
-          icon={Brain}
-          value={smokingDays}
-          label="Smoking Days"
-          colorClass="from-yellow-50 to-orange-50 border-yellow-200 text-yellow-700"
-        />
-      </div>
+      {(avgCalories > 0 || avgWeight !== '--' || avgPulse !== '--' || avgTemperature !== '--' || smokingDays > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {avgCalories > 0 && (
+            <MetricCard
+              icon={Target}
+              value={avgCalories}
+              label="Avg Daily Calories"
+              colorClass="from-orange-50 to-red-50 border-orange-200 text-orange-700"
+            />
+          )}
+          {avgWeight !== '--' && (
+            <MetricCard
+              icon={Scale}
+              value={avgWeight}
+              label="Avg Weight (kg)"
+              colorClass="from-blue-50 to-indigo-50 border-blue-200 text-blue-700"
+            />
+          )}
+          {avgPulse !== '--' && (
+            <MetricCard
+              icon={Heart}
+              value={avgPulse}
+              label="Avg Pulse (bpm)"
+              colorClass="from-pink-50 to-red-50 border-pink-200 text-pink-700"
+            />
+          )}
+          {avgTemperature !== '--' && (
+            <MetricCard
+              icon={Thermometer}
+              value={`${avgTemperature}°C`}
+              label="Avg Temperature"
+              colorClass="from-red-50 to-orange-50 border-red-200 text-red-700"
+            />
+          )}
+          {smokingDays > 0 && (
+            <MetricCard
+              icon={Brain}
+              value={smokingDays}
+              label="Smoking Days"
+              colorClass="from-yellow-50 to-orange-50 border-yellow-200 text-yellow-700"
+            />
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Monthly Calories Chart */}

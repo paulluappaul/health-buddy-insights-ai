@@ -16,7 +16,9 @@ interface FoodTrackerFormProps {
 
 const FoodTrackerForm = ({ onFoodLogged }: FoodTrackerFormProps) => {
   const [foodText, setFoodText] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => {
+    return localStorage.getItem('gemini-api-key') || '';
+  });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
@@ -40,7 +42,10 @@ const FoodTrackerForm = ({ onFoodLogged }: FoodTrackerFormProps) => {
     <div className="space-y-4">
       <ApiKeyInput 
         apiKey={geminiApiKey}
-        onApiKeyChange={setGeminiApiKey}
+        onApiKeyChange={(key) => {
+          setGeminiApiKey(key);
+          localStorage.setItem('gemini-api-key', key);
+        }}
       />
 
       <DateTimePicker
