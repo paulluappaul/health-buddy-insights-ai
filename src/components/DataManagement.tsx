@@ -7,15 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Download, Upload, Shield, AlertTriangle, Smartphone, Info } from 'lucide-react';
 import { exportData, importData, ExportData } from '@/utils/dataManager';
 import { toast } from '@/hooks/use-toast';
+import TabularDataView from '@/components/data/TabularDataView';
 
 interface DataManagementProps {
   foodEntries: any[];
   healthData: any[];
   medications: any[];
   onDataImported: (data: ExportData) => void;
+  onRemoveEntry?: (id: string, type: string) => void;
 }
 
-const DataManagement = ({ foodEntries, healthData, medications, onDataImported }: DataManagementProps) => {
+const DataManagement = ({ foodEntries, healthData, medications, onDataImported, onRemoveEntry }: DataManagementProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -228,6 +230,13 @@ const DataManagement = ({ foodEntries, healthData, medications, onDataImported }
           </div>
         </CardContent>
       </Card>
+
+      {/* Data Table with Remove Functionality */}
+      <TabularDataView
+        foodEntries={foodEntries}
+        healthData={healthData}
+        onRemoveEntry={onRemoveEntry}
+      />
     </div>
   );
 };

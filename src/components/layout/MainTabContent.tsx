@@ -41,6 +41,7 @@ interface MainTabContentProps {
   onMedicationLogged: (medication: MedicationEntry) => void;
   onDataImported: (data: ExportData) => void;
   onDeleteHealthEntry?: (entryId: string) => void;
+  onRemoveEntry?: (id: string, type: string) => void;
 }
 
 const MainTabContent = ({
@@ -52,7 +53,8 @@ const MainTabContent = ({
   onHealthDataLogged,
   onMedicationLogged,
   onDataImported,
-  onDeleteHealthEntry
+  onDeleteHealthEntry,
+  onRemoveEntry
 }: MainTabContentProps) => {
   return (
     <>
@@ -97,6 +99,7 @@ const MainTabContent = ({
           healthData={rawHealthData}
           medications={medications}
           onDataImported={onDataImported}
+          onRemoveEntry={onRemoveEntry}
         />
       </TabsContent>
     </>

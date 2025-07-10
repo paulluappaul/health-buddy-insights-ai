@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarDays, Search, Filter } from 'lucide-react';
+import { CalendarDays, Search, Filter, Trash2 } from 'lucide-react';
 
 interface FoodEntry {
   id: string;
@@ -39,9 +39,10 @@ interface HealthData {
 interface TabularDataViewProps {
   foodEntries: FoodEntry[];
   healthData: HealthData[];
+  onRemoveEntry?: (id: string, type: string) => void;
 }
 
-const TabularDataView = ({ foodEntries, healthData }: TabularDataViewProps) => {
+const TabularDataView = ({ foodEntries, healthData, onRemoveEntry }: TabularDataViewProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
@@ -238,6 +239,7 @@ const TabularDataView = ({ foodEntries, healthData }: TabularDataViewProps) => {
                 <TableHead>Details</TableHead>
                 <TableHead>Value</TableHead>
                 <TableHead>Unit</TableHead>
+                {onRemoveEntry && <TableHead>Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -263,11 +265,23 @@ const TabularDataView = ({ foodEntries, healthData }: TabularDataViewProps) => {
                     <TableCell>{item.details}</TableCell>
                     <TableCell className="font-medium">{item.value}</TableCell>
                     <TableCell className="text-gray-600">{item.unit}</TableCell>
+                    {onRemoveEntry && (
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onRemoveEntry(item.id, item.type)}
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={onRemoveEntry ? 7 : 6} className="text-center py-8 text-gray-500">
                     No data found matching your filters
                   </TableCell>
                 </TableRow>

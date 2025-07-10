@@ -16,7 +16,8 @@ const Index = () => {
     handleHealthDataLogged,
     handleMedicationLogged,
     handleDataImported,
-    handleDeleteHealthEntry
+    handleDeleteHealthEntry,
+    handleRemoveEntry
   } = useHealthBuddyData();
 
   return (
@@ -41,6 +42,7 @@ const Index = () => {
             onMedicationLogged={handleMedicationLogged}
             onDataImported={handleDataImported}
             onDeleteHealthEntry={handleDeleteHealthEntry}
+            onRemoveEntry={handleRemoveEntry}
           />
         </Tabs>
       </div>

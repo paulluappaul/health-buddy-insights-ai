@@ -140,6 +140,27 @@ export const useHealthBuddyData = () => {
     setHealthData(prev => prev.filter(entry => entry.id !== entryId));
   };
 
+  const handleRemoveEntry = (id: string, type: string) => {
+    console.log('Removing entry:', { id, type });
+    
+    if (type === 'Food') {
+      setFoodEntries(prev => prev.filter(entry => entry.id !== id));
+    } else if (type === 'Smoking') {
+      // Handle health data entries by their composite ID
+      const originalId = id.replace('-smoking', '');
+      setHealthData(prev => prev.filter(entry => entry.id !== originalId));
+    } else {
+      // Handle other health data entries (blood pressure, pulse, weight, etc.)
+      const originalId = id.split('-')[0]; // Extract original ID from composite ID like "123-bp"
+      setHealthData(prev => prev.filter(entry => entry.id !== originalId));
+    }
+    
+    // Handle medication entries  
+    if (type === 'Medication') {
+      setMedications(prev => prev.filter(entry => entry.id !== id));
+    }
+  };
+
   return {
     foodEntries,
     healthData: convertHealthDataForDashboard(healthData),
@@ -149,6 +170,7 @@ export const useHealthBuddyData = () => {
     handleHealthDataLogged,
     handleMedicationLogged,
     handleDataImported,
-    handleDeleteHealthEntry
+    handleDeleteHealthEntry,
+    handleRemoveEntry
   };
 };

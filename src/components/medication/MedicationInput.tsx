@@ -32,6 +32,7 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(new Date().toTimeString().slice(0, 5));
+  const [previousEntries, setPreviousEntries] = useState<Set<string>>(new Set());
 
   const frequencyOptions = [
     { value: 'once-daily', label: 'Once Daily' },
@@ -86,6 +87,9 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
     };
 
     onMedicationLogged(medicationEntry);
+
+    // Store for autocomplete
+    setPreviousEntries(prev => new Set([...prev, `${name.trim()}|${dosage.trim()}|${frequency}`]));
 
     // Reset form
     setName('');
@@ -146,7 +150,16 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
               placeholder="e.g., Aspirin"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              list="medication-names"
+              autoComplete="off"
             />
+            <datalist id="medication-names">
+              {Array.from(previousEntries).map(entry => {
+                const [medName] = entry.split('|');
+                return <option key={medName} value={medName} />;
+              })}
+            </datalist>
           </div>
           <div>
             <Label htmlFor="dosage" className="text-sm text-gray-600">Dosage</Label>
@@ -156,7 +169,16 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
               placeholder="e.g., 100mg"
               value={dosage}
               onChange={(e) => setDosage(e.target.value)}
+              className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              list="dosage-options"
+              autoComplete="off"
             />
+            <datalist id="dosage-options">
+              {Array.from(previousEntries).filter(entry => entry.split('|')[0] === name).map(entry => {
+                const [, medDosage] = entry.split('|');
+                return <option key={medDosage} value={medDosage} />;
+              })}
+            </datalist>
           </div>
         </div>
 
@@ -187,16 +209,17 @@ const MedicationInput = ({ onMedicationLogged }: MedicationInputProps) => {
           </Label>
         </div>
 
-        <div>
-          <Label htmlFor="notes" className="text-sm text-gray-600">Notes (Optional)</Label>
-          <Input
-            id="notes"
-            type="text"
-            placeholder="Any additional notes..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </div>
+          <div>
+            <Label htmlFor="notes" className="text-sm text-gray-600">Notes (Optional)</Label>
+            <Input
+              id="notes"
+              type="text"
+              placeholder="Any additional notes..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            />
+          </div>
 
         <Button onClick={handleSubmit} className="w-full bg-purple-600 hover:bg-purple-700">
           Log Medication

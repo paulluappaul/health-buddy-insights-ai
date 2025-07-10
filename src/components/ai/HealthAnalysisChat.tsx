@@ -80,31 +80,62 @@ const HealthAnalysisChat = ({ healthData, foodEntries, medications, apiKey }: He
     }
   }, [messages]);
 
-  const generateDataSummary = () => {
-    const recentData = healthData.slice(-30); // Last 30 entries
-    const recentFood = foodEntries.slice(-20); // Last 20 entries
-    const recentMeds = medications.slice(-20); // Last 20 entries
+  const generateDataSummary = (analysisType: 'daily' | 'weekly' | 'monthly' = 'daily') => {
+    let timeRange = 7; // Default to last 7 days for daily
+    if (analysisType === 'weekly') timeRange = 30; // Last 30 days for weekly analysis
+    if (analysisType === 'monthly') timeRange = 90; // Last 90 days for monthly analysis
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - timeRange);
+
+    // Group data by individual days
+    const dataByDay: Record<string, {
+      healthData: HealthData[];
+      foodEntries: FoodEntry[];
+      medications: MedicationEntry[];
+    }> = {};
+
+    // Group health data by day
+    healthData.forEach(entry => {
+      if (new Date(entry.date) >= cutoffDate) {
+        const dayKey = new Date(entry.date).toISOString().split('T')[0];
+        if (!dataByDay[dayKey]) {
+          dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
+        }
+        dataByDay[dayKey].healthData.push(entry);
+      }
+    });
+
+    // Group food data by day
+    foodEntries.forEach(entry => {
+      if (new Date(entry.timestamp) >= cutoffDate) {
+        const dayKey = new Date(entry.timestamp).toISOString().split('T')[0];
+        if (!dataByDay[dayKey]) {
+          dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
+        }
+        dataByDay[dayKey].foodEntries.push(entry);
+      }
+    });
+
+    // Group medication data by day
+    medications.forEach(entry => {
+      if (new Date(entry.timestamp) >= cutoffDate) {
+        const dayKey = new Date(entry.timestamp).toISOString().split('T')[0];
+        if (!dataByDay[dayKey]) {
+          dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
+        }
+        dataByDay[dayKey].medications.push(entry);
+      }
+    });
 
     return {
-      healthSummary: `Recent health data (${recentData.length} entries): 
-        - Blood Pressure readings: ${recentData.filter(d => d.bloodPressure).length} entries
-        - Weight measurements: ${recentData.filter(d => d.weight).length} entries  
-        - Mood tracking: ${recentData.filter(d => d.mood).length} entries
-        - Pain levels: ${recentData.filter(d => d.painLevel).length} entries
-        - Movement data: ${recentData.filter(d => d.movementLevel).length} entries
-        - Smoking data: ${recentData.filter(d => d.smoked !== undefined).length} entries`,
-      
-      foodSummary: `Recent nutrition (${recentFood.length} entries): 
-        Total calories tracked: ${recentFood.reduce((sum, f) => sum + f.nutrition.calories, 0)}
-        Common foods: ${[...new Set(recentFood.flatMap(f => f.nutrition.foods))].slice(0, 10).join(', ')}`,
-      
-      medicationSummary: `Medications (${recentMeds.length} entries):
-        Unique medications: ${[...new Set(recentMeds.map(m => m.name))].join(', ')}
-        Adherence rate: ${Math.round((recentMeds.filter(m => m.taken).length / recentMeds.length) * 100)}%`
+      dataByDay,
+      analysisType,
+      totalDays: Object.keys(dataByDay).length
     };
   };
 
-  const handleFullAnalysis = async () => {
+  const handleAnalysis = async (analysisType: 'daily' | 'weekly' | 'monthly') => {
     if (!geminiService) {
       toast({
         title: "Error",
@@ -115,30 +146,47 @@ const HealthAnalysisChat = ({ healthData, foodEntries, medications, apiKey }: He
     }
 
     setIsLoading(true);
-    const summary = generateDataSummary();
+    const summary = generateDataSummary(analysisType);
     
     const analysisPrompt = `You are an experienced doctor reviewing a patient's health data. Please provide a comprehensive but accessible health analysis.
 
-PATIENT DATA SUMMARY:
-${summary.healthSummary}
+ANALYSIS TYPE: ${analysisType.toUpperCase()} ANALYSIS
+TIME PERIOD: ${analysisType === 'daily' ? 'Last 7 days' : analysisType === 'weekly' ? 'Last 30 days (4 weeks)' : 'Last 90 days (3 months)'}
 
-${summary.foodSummary}
-
-${summary.medicationSummary}
-
-DETAILED RECENT DATA:
-Health Metrics: ${JSON.stringify(healthData.slice(-10), null, 2)}
-Food Entries: ${JSON.stringify(foodEntries.slice(-10), null, 2)}
-Medications: ${JSON.stringify(medications.slice(-10), null, 2)}
+DAILY DATA BREAKDOWN (Each day analyzed separately):
+${Object.entries(summary.dataByDay).map(([date, dayData]) => {
+  const healthMetrics = dayData.healthData.map(h => ({
+    bloodPressure: h.bloodPressure,
+    pulse: h.pulse,
+    weight: h.weight,
+    mood: h.mood,
+    temperature: h.temperature,
+    smoked: h.smoked,
+    cigaretteCount: h.cigaretteCount,
+    painLevel: h.painLevel,
+    movementLevel: h.movementLevel
+  }));
+  
+  const dailyCalories = dayData.foodEntries.reduce((sum, f) => sum + f.nutrition.calories, 0);
+  const dailyMeds = dayData.medications.map(m => ({ name: m.name, taken: m.taken }));
+  
+  return `
+DATE: ${date}
+- Health Metrics: ${JSON.stringify(healthMetrics)}
+- Total Calories: ${dailyCalories}
+- Food Items: ${dayData.foodEntries.map(f => f.nutrition.foods).flat().join(', ')}
+- Medications: ${JSON.stringify(dailyMeds)}
+`;
+}).join('\n')}
 
 Please provide:
-1. Overall health assessment
-2. Notable patterns or trends
-3. Areas of concern (if any)
-4. Lifestyle recommendations
-5. Suggestions for tracking or medical follow-up
+1. ${analysisType === 'daily' ? 'Daily patterns and recent trends' : analysisType === 'weekly' ? 'Weekly trends and patterns across days' : 'Monthly trends and long-term patterns'}
+2. Day-by-day observations (do NOT aggregate data, analyze each day individually)
+3. Health insights and correlations between different metrics
+4. Areas of concern or improvement
+5. Specific recommendations for ${analysisType} tracking and monitoring
 
-Keep your response clear, encouraging, and practical. Avoid alarming language but be honest about any concerning patterns.`;
+IMPORTANT: Analyze each day's data separately. Do not combine or average values across days unless specifically noting trends.`;
 
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -178,7 +226,7 @@ Keep your response clear, encouraging, and practical. Avoid alarming language bu
       setMessages(prev => [...prev, aiMessage]);
       toast({
         title: "Analysis Complete",
-        description: "Your health data has been analyzed successfully.",
+        description: `Your ${analysisType} health data has been analyzed successfully.`,
       });
     } catch (error) {
       console.error('Analysis error:', error);
@@ -207,12 +255,13 @@ Keep your response clear, encouraging, and practical. Avoid alarming language bu
     setIsLoading(true);
 
     try {
-      const summary = generateDataSummary();
+      const summary = generateDataSummary('daily');
       const contextPrompt = `You are a helpful health assistant. The user has the following health data context:
 
-${summary.healthSummary}
-${summary.foodSummary}
-${summary.medicationSummary}
+RECENT DAILY DATA (Each day separate):
+${Object.entries(summary.dataByDay).slice(-7).map(([date, dayData]) => {
+  return `${date}: Health metrics: ${JSON.stringify(dayData.healthData)}, Food: ${dayData.foodEntries.length} entries, Meds: ${dayData.medications.length} entries`;
+}).join('\n')}
 
 User question: ${inputMessage}
 
@@ -294,20 +343,40 @@ Please provide a helpful, accurate response based on their health data. If the q
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={handleFullAnalysis}
-            disabled={isLoading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              'Analyze My Health Data'
-            )}
-          </Button>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => handleAnalysis('daily')}
+              disabled={isLoading}
+              className="w-full bg-indigo-600 hover:bg-indigo-700"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                'Daily Analysis (Last 7 Days)'
+              )}
+            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                onClick={() => handleAnalysis('weekly')}
+                disabled={isLoading}
+                variant="outline"
+                className="border-indigo-200 hover:bg-indigo-50"
+              >
+                Weekly Analysis
+              </Button>
+              <Button 
+                onClick={() => handleAnalysis('monthly')}
+                disabled={isLoading}
+                variant="outline"
+                className="border-indigo-200 hover:bg-indigo-50"
+              >
+                Monthly Analysis
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
