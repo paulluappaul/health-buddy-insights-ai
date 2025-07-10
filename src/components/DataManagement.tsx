@@ -119,6 +119,25 @@ const DataManagement = ({ foodEntries, healthData, medications, onDataImported, 
     }
   };
 
+  const handleRemoveEntry = (id: string, type: string) => {
+    console.log('DataManagement handling remove entry:', { id, type });
+    
+    if (onRemoveEntry) {
+      onRemoveEntry(id, type);
+      toast({
+        title: "Entry Removed",
+        description: `${type} entry has been deleted successfully.`,
+      });
+    } else {
+      console.warn('onRemoveEntry handler not provided to DataManagement');
+      toast({
+        title: "Remove Failed",
+        description: "Unable to remove entry. Please try refreshing the page.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const totalEntries = foodEntries.length + healthData.length + medications.length;
 
   return (
@@ -235,7 +254,7 @@ const DataManagement = ({ foodEntries, healthData, medications, onDataImported, 
       <TabularDataView
         foodEntries={foodEntries}
         healthData={healthData}
-        onRemoveEntry={onRemoveEntry}
+        onRemoveEntry={handleRemoveEntry}
       />
     </div>
   );

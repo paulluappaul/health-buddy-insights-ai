@@ -17,9 +17,56 @@ interface NutritionAnalysis {
 
 export class GeminiService {
   private apiKey: string;
+  private maxRetries: number = 3;
+  private baseDelay: number = 1000; // 1 second
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+  }
+
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private async makeApiCall(payload: any, retryCount: number = 0): Promise<any> {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Gemini API error details:', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 429 || (errorData.error?.message && errorData.error.message.includes('overloaded'))) {
+          if (retryCount < this.maxRetries) {
+            const delayTime = this.baseDelay * Math.pow(2, retryCount); // Exponential backoff
+            console.log(`Gemini API overloaded, retrying in ${delayTime}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
+            await this.delay(delayTime);
+            return this.makeApiCall(payload, retryCount + 1);
+          } else {
+            throw new Error('Gemini API is currently overloaded. Please try again in a few minutes.');
+          }
+        }
+        
+        throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (retryCount < this.maxRetries && (error as Error).message.includes('fetch')) {
+        const delayTime = this.baseDelay * Math.pow(2, retryCount);
+        console.log(`Network error, retrying in ${delayTime}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
+        await this.delay(delayTime);
+        return this.makeApiCall(payload, retryCount + 1);
+      }
+      throw error;
+    }
   }
 
   async analyzeFood(description: string): Promise<NutritionAnalysis> {
@@ -75,34 +122,22 @@ Example for "apple and banana":
 
 Now analyze: "${description}"`;
 
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            topK: 1,
-            topP: 0.8,
-            maxOutputTokens: 2048,
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Gemini API error details:', errorData);
-        throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+    const payload = {
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.1,
+        topK: 1,
+        topP: 0.8,
+        maxOutputTokens: 2048,
       }
+    };
 
-      const data = await response.json();
+    try {
+      const data = await this.makeApiCall(payload);
       console.log('Gemini raw response:', data);
       
       const text = data.candidates[0].content.parts[0].text;
@@ -175,42 +210,30 @@ Respond with ONLY valid JSON in this exact format:
 
 Analyze the image now:`;
 
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                text: prompt
-              },
-              {
-                inline_data: {
-                  mime_type: imageFile.type,
-                  data: base64Image.split(',')[1]
-                }
-              }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            topK: 1,
-            topP: 0.8,
-            maxOutputTokens: 2048,
+    const payload = {
+      contents: [{
+        parts: [
+          {
+            text: prompt
+          },
+          {
+            inline_data: {
+              mime_type: imageFile.type,
+              data: base64Image.split(',')[1]
+            }
           }
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Gemini Vision API error details:', errorData);
-        throw new Error(`Gemini Vision API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.1,
+        topK: 1,
+        topP: 0.8,
+        maxOutputTokens: 2048,
       }
+    };
 
-      const data = await response.json();
+    try {
+      const data = await this.makeApiCall(payload);
       console.log('Gemini Vision raw response:', data);
       
       const text = data.candidates[0].content.parts[0].text;

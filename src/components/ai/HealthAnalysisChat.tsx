@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,50 +89,64 @@ const HealthAnalysisChat = ({ healthData, foodEntries, medications, apiKey }: He
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - timeRange);
 
-    // Group data by individual days
+    console.log(`Generating ${analysisType} data summary for last ${timeRange} days`);
+
+    // Filter and group data by day
     const dataByDay: Record<string, {
       healthData: HealthData[];
       foodEntries: FoodEntry[];
       medications: MedicationEntry[];
     }> = {};
 
-    // Group health data by day
-    healthData.forEach(entry => {
-      if (new Date(entry.date) >= cutoffDate) {
-        const dayKey = new Date(entry.date).toISOString().split('T')[0];
-        if (!dataByDay[dayKey]) {
-          dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
-        }
-        dataByDay[dayKey].healthData.push(entry);
-      }
+    // Process health data
+    const filteredHealthData = healthData.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate >= cutoffDate;
     });
 
-    // Group food data by day
-    foodEntries.forEach(entry => {
-      if (new Date(entry.timestamp) >= cutoffDate) {
-        const dayKey = new Date(entry.timestamp).toISOString().split('T')[0];
-        if (!dataByDay[dayKey]) {
-          dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
-        }
-        dataByDay[dayKey].foodEntries.push(entry);
+    filteredHealthData.forEach(entry => {
+      const dayKey = new Date(entry.date).toISOString().split('T')[0];
+      if (!dataByDay[dayKey]) {
+        dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
       }
+      dataByDay[dayKey].healthData.push(entry);
     });
 
-    // Group medication data by day
-    medications.forEach(entry => {
-      if (new Date(entry.timestamp) >= cutoffDate) {
-        const dayKey = new Date(entry.timestamp).toISOString().split('T')[0];
-        if (!dataByDay[dayKey]) {
-          dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
-        }
-        dataByDay[dayKey].medications.push(entry);
-      }
+    // Process food data
+    const filteredFoodEntries = foodEntries.filter(entry => {
+      const entryDate = new Date(entry.timestamp);
+      return entryDate >= cutoffDate;
     });
 
+    filteredFoodEntries.forEach(entry => {
+      const dayKey = new Date(entry.timestamp).toISOString().split('T')[0];
+      if (!dataByDay[dayKey]) {
+        dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
+      }
+      dataByDay[dayKey].foodEntries.push(entry);
+    });
+
+    // Process medication data
+    const filteredMedications = medications.filter(entry => {
+      const entryDate = new Date(entry.timestamp);
+      return entryDate >= cutoffDate;
+    });
+
+    filteredMedications.forEach(entry => {
+      const dayKey = new Date(entry.timestamp).toISOString().split('T')[0];
+      if (!dataByDay[dayKey]) {
+        dataByDay[dayKey] = { healthData: [], foodEntries: [], medications: [] };
+      }
+      dataByDay[dayKey].medications.push(entry);
+    });
+
+    console.log(`Data summary generated: ${Object.keys(dataByDay).length} days with data`);
+    
     return {
       dataByDay,
       analysisType,
-      totalDays: Object.keys(dataByDay).length
+      totalDays: Object.keys(dataByDay).length,
+      totalEntries: filteredHealthData.length + filteredFoodEntries.length + filteredMedications.length
     };
   };
 
@@ -146,49 +161,70 @@ const HealthAnalysisChat = ({ healthData, foodEntries, medications, apiKey }: He
     }
 
     setIsLoading(true);
-    const summary = generateDataSummary(analysisType);
+    console.log(`Starting ${analysisType} analysis`);
     
-    const analysisPrompt = `You are an experienced doctor reviewing a patient's health data. Please provide a comprehensive but accessible health analysis.
+    try {
+      const summary = generateDataSummary(analysisType);
+      
+      if (summary.totalEntries === 0) {
+        toast({
+          title: "No Data Available",
+          description: `No health data found for ${analysisType} analysis. Please add some health entries first.`,
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const analysisPrompt = `You are an experienced doctor reviewing a patient's health data. Please provide a comprehensive but accessible health analysis.
 
 ANALYSIS TYPE: ${analysisType.toUpperCase()} ANALYSIS
 TIME PERIOD: ${analysisType === 'daily' ? 'Last 7 days' : analysisType === 'weekly' ? 'Last 30 days (4 weeks)' : 'Last 90 days (3 months)'}
+DATA SUMMARY: ${summary.totalEntries} total entries across ${summary.totalDays} days
 
 DAILY DATA BREAKDOWN (Each day analyzed separately):
 ${Object.entries(summary.dataByDay).map(([date, dayData]) => {
-  const healthMetrics = dayData.healthData.map(h => ({
-    bloodPressure: h.bloodPressure,
-    pulse: h.pulse,
-    weight: h.weight,
-    mood: h.mood,
-    temperature: h.temperature,
-    smoked: h.smoked,
-    cigaretteCount: h.cigaretteCount,
-    painLevel: h.painLevel,
-    movementLevel: h.movementLevel
-  }));
+  const healthMetrics = dayData.healthData.map(h => {
+    const metrics: any = {};
+    if (h.bloodPressure) metrics.bloodPressure = `${h.bloodPressure.systolic}/${h.bloodPressure.diastolic}`;
+    if (h.pulse) metrics.pulse = h.pulse;
+    if (h.weight) metrics.weight = `${h.weight}kg`;
+    if (h.mood) metrics.mood = h.mood;
+    if (h.temperature) metrics.temperature = `${h.temperature}°${h.temperatureUnit === 'fahrenheit' ? 'F' : 'C'}`;
+    if (h.smoked !== undefined) metrics.smoking = h.smoked ? `${h.cigaretteCount || 0} cigarettes` : 'no smoking';
+    if (h.painLevel) metrics.painLevel = h.painLevel;
+    if (h.movementLevel) metrics.movement = h.movementLevel;
+    if (h.sport) metrics.sport = 'yes';
+    return metrics;
+  });
   
-  const dailyCalories = dayData.foodEntries.reduce((sum, f) => sum + f.nutrition.calories, 0);
-  const dailyMeds = dayData.medications.map(m => ({ name: m.name, taken: m.taken }));
+  const dailyCalories = dayData.foodEntries.reduce((sum, f) => sum + (f.nutrition?.calories || 0), 0);
+  const foodItems = dayData.foodEntries.map(f => f.nutrition?.foods || []).flat();
+  const dailyMeds = dayData.medications.map(m => ({ name: m.name, taken: m.taken, dosage: m.dosage }));
   
   return `
 DATE: ${date}
 - Health Metrics: ${JSON.stringify(healthMetrics)}
 - Total Calories: ${dailyCalories}
-- Food Items: ${dayData.foodEntries.map(f => f.nutrition.foods).flat().join(', ')}
+- Food Items: ${foodItems.join(', ') || 'None'}
 - Medications: ${JSON.stringify(dailyMeds)}
 `;
 }).join('\n')}
 
 Please provide:
-1. ${analysisType === 'daily' ? 'Daily patterns and recent trends' : analysisType === 'weekly' ? 'Weekly trends and patterns across days' : 'Monthly trends and long-term patterns'}
-2. Day-by-day observations (do NOT aggregate data, analyze each day individually)
-3. Health insights and correlations between different metrics
-4. Areas of concern or improvement
-5. Specific recommendations for ${analysisType} tracking and monitoring
+1. ${analysisType === 'daily' ? 'Daily patterns and recent trends over the past week' : analysisType === 'weekly' ? 'Weekly trends and patterns across the past month' : 'Monthly trends and long-term patterns over the past 3 months'}
+2. Day-by-day observations where relevant (analyze each day's data individually, don't aggregate unless showing trends)
+3. Health insights and correlations between different metrics (e.g., mood vs sleep, food vs energy)
+4. Areas of concern or improvement opportunities
+5. Specific actionable recommendations for ${analysisType} health tracking and monitoring
 
-IMPORTANT: Analyze each day's data separately. Do not combine or average values across days unless specifically noting trends.`;
+IMPORTANT: 
+- Analyze each day's data separately where meaningful
+- Look for patterns and correlations between metrics
+- Provide practical, actionable advice
+- Be encouraging while being medically responsible
+- Remember this is for personal health tracking, not medical diagnosis`;
 
-    try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
@@ -210,7 +246,11 @@ IMPORTANT: Analyze each day's data separately. Do not combine or average values 
       });
 
       if (!response.ok) {
-        throw new Error(`Analysis failed: ${response.status}`);
+        const errorData = await response.json();
+        if (response.status === 429 || (errorData.error?.message && errorData.error.message.includes('overloaded'))) {
+          throw new Error('Gemini API is currently overloaded. Please try again in a few minutes.');
+        }
+        throw new Error(`Analysis failed: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
@@ -230,9 +270,10 @@ IMPORTANT: Analyze each day's data separately. Do not combine or average values 
       });
     } catch (error) {
       console.error('Analysis error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze your health data. Please try again.';
       toast({
-        title: "Analysis Failed",
-        description: "Failed to analyze your health data. Please try again.",
+        title: "Analysis Failed",  
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -258,9 +299,21 @@ IMPORTANT: Analyze each day's data separately. Do not combine or average values 
       const summary = generateDataSummary('daily');
       const contextPrompt = `You are a helpful health assistant. The user has the following health data context:
 
-RECENT DAILY DATA (Each day separate):
+RECENT DAILY DATA (Last 7 days):
 ${Object.entries(summary.dataByDay).slice(-7).map(([date, dayData]) => {
-  return `${date}: Health metrics: ${JSON.stringify(dayData.healthData)}, Food: ${dayData.foodEntries.length} entries, Meds: ${dayData.medications.length} entries`;
+  const healthSummary = dayData.healthData.map(h => {
+    const items = [];
+    if (h.bloodPressure) items.push(`BP: ${h.bloodPressure.systolic}/${h.bloodPressure.diastolic}`);
+    if (h.pulse) items.push(`Pulse: ${h.pulse}`);
+    if (h.weight) items.push(`Weight: ${h.weight}kg`);
+    if (h.mood) items.push(`Mood: ${h.mood}`);
+    return items.join(', ');
+  }).join('; ');
+  
+  const foodSummary = `${dayData.foodEntries.length} food entries (${dayData.foodEntries.reduce((sum, f) => sum + (f.nutrition?.calories || 0), 0)} cal)`;
+  const medSummary = `${dayData.medications.length} medication entries`;
+  
+  return `${date}: ${healthSummary || 'No health metrics'}, ${foodSummary}, ${medSummary}`;
 }).join('\n')}
 
 User question: ${inputMessage}
@@ -288,7 +341,11 @@ Please provide a helpful, accurate response based on their health data. If the q
       });
 
       if (!response.ok) {
-        throw new Error(`Chat failed: ${response.status}`);
+        const errorData = await response.json();
+        if (response.status === 429 || (errorData.error?.message && errorData.error.message.includes('overloaded'))) {
+          throw new Error('Gemini API is currently overloaded. Please try again in a few minutes.');
+        }
+        throw new Error(`Chat failed: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
@@ -304,9 +361,10 @@ Please provide a helpful, accurate response based on their health data. If the q
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Chat error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message. Please try again.';
       toast({
         title: "Chat Error",
-        description: "Failed to send message. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -391,7 +449,7 @@ Please provide a helpful, accurate response based on their health data. If the q
           <ScrollArea className="h-64 w-full border rounded-lg p-3 mb-4" ref={scrollAreaRef}>
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
-                Start a conversation by asking about your health data or click "Analyze My Health Data" above.
+                Start a conversation by asking about your health data or click "Daily Analysis" above.
               </div>
             ) : (
               <div className="space-y-4">
